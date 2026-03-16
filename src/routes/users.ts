@@ -45,11 +45,11 @@ router.post(
         return;
       }
 
-      const passwordHash = await bcrypt.hash(req.body.password, SALT_ROUNDS);
-      const user = await createUser({ ...req.body, passwordHash });
+      const password_hash = await bcrypt.hash(req.body.password, SALT_ROUNDS);
+      const user = await createUser({ ...req.body, password_hash });
 
       // Strip password hash from response
-      const { passwordHash: _, ...safeUser } = user;
+      const { password_hash: _, ...safeUser } = user;
       logger.info("User created", { email: user.email, role: user.role });
       res.status(201).json(buildResponse(safeUser));
     } catch (err) {
@@ -75,7 +75,7 @@ router.post(
         return;
       }
 
-      const validPassword = await bcrypt.compare(req.body.password, user.passwordHash);
+      const validPassword = await bcrypt.compare(req.body.password, user.password_hash);
 
       if (!validPassword) {
         logger.warn("Failed login attempt", { email: req.body.email });
@@ -85,7 +85,7 @@ router.post(
 
       await updateLastLogin(user.id);
 
-      const { passwordHash: _, ...safeUser } = user;
+      const { password_hash: _, ...safeUser } = user;
       const token = generateToken(safeUser);
 
       logger.info("User logged in", { email: user.email });

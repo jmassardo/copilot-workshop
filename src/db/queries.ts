@@ -147,17 +147,17 @@ export async function getUserById(id: number): Promise<User | null> {
   return queryOne<User>("SELECT * FROM users WHERE id = $1", [id]);
 }
 
-export async function createUser(user: CreateUserRequest & { passwordHash: string }): Promise<User> {
+export async function createUser(user: CreateUserRequest & { password_hash: string }): Promise<User> {
   const rows = await query<User>(
     `INSERT INTO users (email, password_hash, first_name, last_name, role)
      VALUES ($1, $2, $3, $4, $5)
      RETURNING *`,
-    [user.email, user.passwordHash, user.firstName, user.lastName, user.role]
+    [user.email, user.password_hash, user.firstName, user.lastName, user.role]
   );
   return rows[0];
 }
 
-export async function getAllUsers(): Promise<Omit<User, "passwordHash">[]> {
+export async function getAllUsers(): Promise<Omit<User, "password_hash">[]> {
   return query(
     `SELECT id, email, first_name, last_name, role, last_login_at, created_at, updated_at
      FROM users ORDER BY last_name, first_name`

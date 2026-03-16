@@ -1,28 +1,16 @@
-import { Pool, PoolConfig } from "pg";
+import { PGlite } from "@electric-sql/pglite";
 import { logger } from "../utils/logger";
+import path from "path";
 
-const poolConfig: PoolConfig = {
-  connectionString: process.env.DATABASE_URL,
-  max: 20,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 5000,
-};
+const dataDir = process.env.PGLITE_DATA_DIR || path.join(process.cwd(), "data");
 
 /**
- * PostgreSQL connection pool.
+ * PGlite embedded PostgreSQL instance.
  *
- * All database access should go through this pool.
- * Do NOT create additional pools or direct connections.
+ * All database access should go through the exported query helpers.
+ * Data is stored in the local `data/` directory (no external PostgreSQL required).
  */
-export const pool = new Pool(poolConfig);
-
-pool.on("error", (err) => {
-  logger.error("Unexpected database pool error", { error: err.message });
-});
-
-pool.on("connect", () => {
-  logger.debug("New database connection established");
-});
+export const db = new PGlite(dataDir);
 
 /**
  * Execute a parameterized query.
@@ -33,10 +21,10 @@ pool.on("connect", () => {
 export async function query<T>(text: string, params?: unknown[]): Promise<T[]> {
   const start = Date.now();
   try {
-    const result = await pool.query(text, params);
+    const result = await db.query<T>(text, params);
     const duration = Date.now() - start;
-    logger.debug("Query executed", { text, duration, rows: result.rowCount });
-    return result.rows as T[];
+    logger.debug("Query executed", { text, duration, rows: result.rows.length });
+    return result.rows;
   } catch (error) {
     logger.error("Query failed", {
       text,

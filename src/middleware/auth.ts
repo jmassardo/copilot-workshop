@@ -31,7 +31,7 @@ export function authenticate(
   const token = authHeader.split(" ")[1];
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as Omit<User, "passwordHash">;
+    const decoded = jwt.verify(token, JWT_SECRET) as Omit<User, "password_hash">;
     (req as any).user = decoded;
     next();
   } catch (err) {
@@ -49,7 +49,7 @@ export function authenticate(
 /**
  * Generate a JWT token for an authenticated user.
  */
-export function generateToken(user: Omit<User, "passwordHash">): string {
+export function generateToken(user: Omit<User, "password_hash">): string {
   return jwt.sign(
     { id: user.id, email: user.email, role: user.role },
     JWT_SECRET,

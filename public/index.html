@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inventory Tracker</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --text-muted: #8b949e;
+      --accent: #58a6ff;
+      --accent-hover: #79c0ff;
+      --green: #3fb950;
+      --yellow: #d29922;
+      --red: #f85149;
+      --radius: 8px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    /* ─── Layout ─────────────────────────────────────────── */
+
+    .app {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    header h1 {
+      font-size: 24px;
+      font-weight: 600;
+    }
+
+    header h1 span { color: var(--accent); }
+
+    .auth-section {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .user-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .user-badge .role {
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .role-admin { background: rgba(248,81,73,0.15); color: var(--red); }
+    .role-manager { background: rgba(210,153,34,0.15); color: var(--yellow); }
+    .role-viewer { background: rgba(63,185,80,0.15); color: var(--green); }
+
+    /* ─── Stats Cards ────────────────────────────────────── */
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+
+    .stat-card .label {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .stat-card .value {
+      font-size: 28px;
+      font-weight: 600;
+    }
+
+    .stat-card .value.warn { color: var(--yellow); }
+    .stat-card .value.danger { color: var(--red); }
+    .stat-card .value.money { color: var(--green); }
+
+    /* ─── Tabs ───────────────────────────────────────────── */
+
+    .tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tab {
+      padding: 8px 16px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 14px;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    .tab:hover { color: var(--text); }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    /* ─── Controls ───────────────────────────────────────── */
+
+    .controls {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .search-input {
+      flex: 1;
+      min-width: 200px;
+      padding: 8px 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+    }
+
+    .search-input:focus { border-color: var(--accent); }
+
+    select {
+      padding: 8px 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    select:focus { border-color: var(--accent); }
+
+    .btn {
+      padding: 8px 16px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+      background: var(--surface);
+      color: var(--text);
+    }
+
+    .btn:hover { border-color: var(--text-muted); }
+
+    .btn-primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #0d1117;
+      font-weight: 600;
+    }
+
+    .btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+
+    .btn-danger {
+      color: var(--red);
+    }
+
+    .btn-danger:hover { background: rgba(248,81,73,0.1); border-color: var(--red); }
+
+    .btn-sm { padding: 4px 10px; font-size: 12px; }
+
+    /* ─── Table ──────────────────────────────────────────── */
+
+    .table-wrapper {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    th {
+      text-align: left;
+      padding: 12px 16px;
+      font-weight: 600;
+      color: var(--text-muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    tr:last-child td { border-bottom: none; }
+
+    tr:hover td { background: rgba(88,166,255,0.04); }
+
+    .sku {
+      font-family: "SF Mono", SFMono-Regular, Consolas, monospace;
+      font-size: 13px;
+      color: var(--accent);
+    }
+
+    .category-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .cat-electronics { background: rgba(88,166,255,0.15); color: var(--accent); }
+    .cat-furniture { background: rgba(210,153,34,0.15); color: var(--yellow); }
+    .cat-office_supplies { background: rgba(63,185,80,0.15); color: var(--green); }
+    .cat-raw_materials { background: rgba(139,148,158,0.2); color: var(--text-muted); }
+    .cat-finished_goods { background: rgba(188,140,255,0.15); color: #bc8cff; }
+
+    .stock-level { font-weight: 600; }
+    .stock-ok { color: var(--green); }
+    .stock-low { color: var(--yellow); }
+    .stock-out { color: var(--red); }
+
+    .price { font-family: "SF Mono", SFMono-Regular, Consolas, monospace; }
+
+    /* ─── Modal ──────────────────────────────────────────── */
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      width: 480px;
+      max-width: 90vw;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal h2 {
+      font-size: 18px;
+      margin-bottom: 16px;
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 8px 12px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      border-color: var(--accent);
+    }
+
+    .form-row { display: flex; gap: 12px; }
+    .form-row .form-group { flex: 1; }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 20px;
+    }
+
+    /* ─── Login Panel ────────────────────────────────────── */
+
+    .login-panel {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .login-panel select {
+      font-size: 13px;
+    }
+
+    /* ─── Toast ──────────────────────────────────────────── */
+
+    .toast-container {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .toast {
+      padding: 12px 20px;
+      border-radius: var(--radius);
+      font-size: 14px;
+      animation: slideIn 0.2s ease-out;
+      border: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .toast-success { border-color: var(--green); color: var(--green); }
+    .toast-error { border-color: var(--red); color: var(--red); }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* ─── Empty / Loading ────────────────────────────────── */
+
+    .loading, .empty {
+      padding: 48px;
+      text-align: center;
+      color: var(--text-muted);
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 24px;
+      height: 24px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      margin-bottom: 8px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ─── Detail Panel ───────────────────────────────────── */
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .detail-item .label {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .detail-item .value {
+      font-size: 16px;
+      font-weight: 500;
+    }
+
+    /* ─── Pagination ─────────────────────────────────────── */
+
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .page-buttons { display: flex; gap: 4px; }
+
+    /* ─── Reorder Table ──────────────────────────────────── */
+
+    .reorder-action {
+      font-size: 13px;
+      color: var(--yellow);
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+
+<div class="app">
+  <header>
+    <h1>📦 <span>Inventory Tracker</span></h1>
+    <div class="auth-section">
+      <div class="login-panel" id="loginPanel">
+        <select id="loginSelect">
+          <option value="">Sign in as...</option>
+          <option value="admin@example.com">Admin User</option>
+          <option value="manager@example.com">Sarah Chen (Manager)</option>
+          <option value="viewer@example.com">Marcus Johnson (Viewer)</option>
+        </select>
+        <button class="btn btn-primary btn-sm" onclick="login()">Sign In</button>
+      </div>
+      <div id="userInfo" style="display:none"></div>
+    </div>
+  </header>
+
+  <!-- Stats -->
+  <div class="stats" id="stats">
+    <div class="stat-card"><div class="label">Total Products</div><div class="value" id="statTotal">—</div></div>
+    <div class="stat-card"><div class="label">Total Value</div><div class="value money" id="statValue">—</div></div>
+    <div class="stat-card"><div class="label">Low Stock</div><div class="value warn" id="statLow">—</div></div>
+    <div class="stat-card"><div class="label">Out of Stock</div><div class="value danger" id="statOut">—</div></div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" data-tab="inventory" onclick="switchTab('inventory')">Inventory</button>
+    <button class="tab" data-tab="low-stock" onclick="switchTab('low-stock')">⚠️ Low Stock</button>
+    <button class="tab" data-tab="reorder" onclick="switchTab('reorder')">Reorder Report</button>
+  </div>
+
+  <!-- Inventory Tab -->
+  <div id="tab-inventory">
+    <div class="controls">
+      <input type="text" class="search-input" id="searchInput" placeholder="Search items by name or SKU..." oninput="filterItems()">
+      <select id="categoryFilter" onchange="filterItems()">
+        <option value="">All Categories</option>
+        <option value="electronics">Electronics</option>
+        <option value="furniture">Furniture</option>
+        <option value="office_supplies">Office Supplies</option>
+        <option value="raw_materials">Raw Materials</option>
+        <option value="finished_goods">Finished Goods</option>
+      </select>
+      <button class="btn btn-primary" id="addItemBtn" onclick="openAddModal()" style="display:none">+ Add Item</button>
+    </div>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>SKU</th>
+            <th>Name</th>
+            <th>Category</th>
+            <th>Qty</th>
+            <th>Price</th>
+            <th>Location</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="itemsBody">
+          <tr><td colspan="7" class="loading"><div class="spinner"></div><br>Loading inventory...</td></tr>
+        </tbody>
+      </table>
+      <div class="pagination" id="pagination"></div>
+    </div>
+  </div>
+
+  <!-- Low Stock Tab -->
+  <div id="tab-low-stock" style="display:none">
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>SKU</th>
+            <th>Name</th>
+            <th>Category</th>
+            <th>Qty</th>
+            <th>Reorder At</th>
+            <th>Location</th>
+          </tr>
+        </thead>
+        <tbody id="lowStockBody">
+          <tr><td colspan="6" class="loading"><div class="spinner"></div><br>Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Reorder Tab -->
+  <div id="tab-reorder" style="display:none">
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>SKU</th>
+            <th>Name</th>
+            <th>Current Qty</th>
+            <th>Reorder Threshold</th>
+            <th>Suggested Order</th>
+            <th>Supplier</th>
+          </tr>
+        </thead>
+        <tbody id="reorderBody">
+          <tr><td colspan="6" class="loading"><div class="spinner"></div><br>Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Item Detail Modal -->
+<div class="modal-overlay" id="detailModal">
+  <div class="modal">
+    <h2 id="detailTitle">Item Details</h2>
+    <div class="detail-grid" id="detailGrid"></div>
+    <div class="modal-actions">
+      <button class="btn btn-danger btn-sm" id="deleteBtn" style="display:none" onclick="deleteItem()">Delete</button>
+      <div style="flex:1"></div>
+      <button class="btn" onclick="closeModal('detailModal')">Close</button>
+      <button class="btn btn-primary" id="editBtn" style="display:none" onclick="openEditModal()">Edit</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Item Modal -->
+<div class="modal-overlay" id="formModal">
+  <div class="modal">
+    <h2 id="formTitle">Add Item</h2>
+    <form id="itemForm" onsubmit="submitItem(event)">
+      <div class="form-row">
+        <div class="form-group">
+          <label>SKU</label>
+          <input type="text" id="fSku" required placeholder="e.g. ELEC-006">
+        </div>
+        <div class="form-group">
+          <label>Category</label>
+          <select id="fCategory" required>
+            <option value="electronics">Electronics</option>
+            <option value="furniture">Furniture</option>
+            <option value="office_supplies">Office Supplies</option>
+            <option value="raw_materials">Raw Materials</option>
+            <option value="finished_goods">Finished Goods</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Name</label>
+        <input type="text" id="fName" required placeholder="Product name">
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea id="fDesc" rows="2" placeholder="Brief description"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Quantity</label>
+          <input type="number" id="fQty" min="0" value="0" required>
+        </div>
+        <div class="form-group">
+          <label>Unit Price ($)</label>
+          <input type="number" id="fPrice" min="0.01" step="0.01" required placeholder="0.00">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Reorder Threshold</label>
+          <input type="number" id="fReorder" min="0" value="0">
+        </div>
+        <div class="form-group">
+          <label>Location</label>
+          <input type="text" id="fLocation" placeholder="e.g. Aisle A, Shelf 1">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Supplier ID</label>
+        <input type="number" id="fSupplier" min="1" max="5" placeholder="1-5">
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn" onclick="closeModal('formModal')">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="formSubmitBtn">Create</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toasts"></div>
+
+<script>
+  // ─── State ──────────────────────────────────────────────
+
+  let token = null;
+  let currentUser = null;
+  let allItems = [];
+  let currentPage = 1;
+  let totalItems = 0;
+  const pageSize = 20;
+  let editingItemId = null;
+  let viewingItemId = null;
+
+  const API = '';
+
+  // Password map for quick-login
+  const passwords = {
+    'admin@example.com': 'admin123',
+    'manager@example.com': 'manager123',
+    'viewer@example.com': 'viewer123',
+  };
+
+  // ─── Auth ───────────────────────────────────────────────
+
+  async function login() {
+    const email = document.getElementById('loginSelect').value;
+    if (!email) return;
+
+    try {
+      const res = await fetch(`${API}/api/users/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password: passwords[email] }),
+      });
+      const json = await res.json();
+
+      if (json.error) {
+        toast(json.error, 'error');
+        return;
+      }
+
+      token = json.data.token;
+      currentUser = json.data.user;
+      updateAuthUI();
+      loadAll();
+      toast(`Signed in as ${currentUser.first_name} ${currentUser.last_name}`, 'success');
+    } catch (e) {
+      toast('Login failed: ' + e.message, 'error');
+    }
+  }
+
+  function logout() {
+    token = null;
+    currentUser = null;
+    updateAuthUI();
+    loadAll();
+  }
+
+  function updateAuthUI() {
+    const panel = document.getElementById('loginPanel');
+    const info = document.getElementById('userInfo');
+    const addBtn = document.getElementById('addItemBtn');
+
+    if (currentUser) {
+      panel.style.display = 'none';
+      info.style.display = 'flex';
+      info.innerHTML = `
+        <div class="user-badge">
+          ${currentUser.first_name} ${currentUser.last_name}
+          <span class="role role-${currentUser.role}">${currentUser.role}</span>
+        </div>
+        <button class="btn btn-sm" onclick="logout()">Sign Out</button>
+      `;
+      addBtn.style.display = ['admin', 'manager'].includes(currentUser.role) ? '' : 'none';
+    } else {
+      panel.style.display = 'flex';
+      info.style.display = 'none';
+      addBtn.style.display = 'none';
+    }
+  }
+
+  function authHeaders() {
+    const h = { 'Content-Type': 'application/json' };
+    if (token) h['Authorization'] = `Bearer ${token}`;
+    return h;
+  }
+
+  // ─── Data Loading ───────────────────────────────────────
+
+  async function loadAll() {
+    loadItems();
+    loadSummary();
+  }
+
+  async function loadItems() {
+    try {
+      const res = await fetch(`${API}/api/items?page=${currentPage}&pageSize=${pageSize}`);
+      const json = await res.json();
+      allItems = json.data || [];
+      totalItems = json.meta?.pagination?.totalItems || allItems.length;
+      renderItems();
+    } catch (e) {
+      document.getElementById('itemsBody').innerHTML =
+        `<tr><td colspan="7" class="empty">Failed to load items</td></tr>`;
+    }
+  }
+
+  async function loadSummary() {
+    try {
+      const res = await fetch(`${API}/api/reports/inventory-summary`, { headers: authHeaders() });
+      const json = await res.json();
+      if (json.data) {
+        document.getElementById('statTotal').textContent = json.data.totalItems;
+        document.getElementById('statValue').textContent = '$' + Number(json.data.totalValue).toLocaleString('en-US', { minimumFractionDigits: 2 });
+        document.getElementById('statLow').textContent = json.data.lowStockCount;
+        document.getElementById('statOut').textContent = json.data.outOfStockCount;
+      } else {
+        // Not authenticated — show placeholder
+        document.getElementById('statTotal').textContent = '—';
+        document.getElementById('statValue').textContent = '—';
+        document.getElementById('statLow').textContent = '—';
+        document.getElementById('statOut').textContent = '—';
+      }
+    } catch (e) {
+      // Stats optional
+    }
+  }
+
+  async function loadLowStock() {
+    const body = document.getElementById('lowStockBody');
+
+    if (!token) {
+      body.innerHTML = `<tr><td colspan="6" class="empty">Sign in to view low stock items</td></tr>`;
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API}/api/items/low-stock`, { headers: authHeaders() });
+      const json = await res.json();
+
+      if (json.error) {
+        body.innerHTML = `<tr><td colspan="6" class="empty">Sign in to view low stock items</td></tr>`;
+        return;
+      }
+
+      const items = json.data || [];
+
+      if (items.length === 0) {
+        body.innerHTML = `<tr><td colspan="6" class="empty">No low stock items — everything is well stocked! 🎉</td></tr>`;
+        return;
+      }
+
+      body.innerHTML = items.map(item => `
+        <tr>
+          <td class="sku">${esc(item.sku)}</td>
+          <td>${esc(item.name)}</td>
+          <td><span class="category-badge cat-${item.category}">${formatCategory(item.category)}</span></td>
+          <td class="stock-level ${item.quantity === 0 ? 'stock-out' : 'stock-low'}">${item.quantity}</td>
+          <td>${item.reorder_threshold}</td>
+          <td>${esc(item.location)}</td>
+        </tr>
+      `).join('');
+    } catch (e) {
+      body.innerHTML = `<tr><td colspan="6" class="empty">Failed to load low stock items</td></tr>`;
+    }
+  }
+
+  async function loadReorder() {
+    const body = document.getElementById('reorderBody');
+
+    if (!token) {
+      body.innerHTML = `<tr><td colspan="6" class="empty">Sign in to view reorder report</td></tr>`;
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API}/api/reports/reorder`, { headers: authHeaders() });
+      const json = await res.json();
+
+      if (json.error) {
+        body.innerHTML = `<tr><td colspan="6" class="empty">Sign in to view reorder report</td></tr>`;
+        return;
+      }
+
+      const items = json.data || [];
+
+      if (items.length === 0) {
+        body.innerHTML = `<tr><td colspan="6" class="empty">No items need reordering</td></tr>`;
+        return;
+      }
+
+      body.innerHTML = items.map(item => {
+        const threshold = item.reorder_threshold || 0;
+        const suggested = Math.max(0, threshold * 2 - item.quantity);
+        return `
+          <tr>
+            <td class="sku">${esc(item.sku)}</td>
+            <td>${esc(item.name)}</td>
+            <td class="stock-level stock-low">${item.quantity}</td>
+            <td>${threshold}</td>
+            <td class="reorder-action">${suggested} units</td>
+            <td>${esc(item.supplier_name || '—')}</td>
+          </tr>
+        `;
+      }).join('');
+    } catch (e) {
+      body.innerHTML = `<tr><td colspan="6" class="empty">Failed to load reorder report</td></tr>`;
+    }
+  }
+
+  // ─── Render ─────────────────────────────────────────────
+
+  function renderItems() {
+    const body = document.getElementById('itemsBody');
+    let items = filterList(allItems);
+
+    if (items.length === 0) {
+      body.innerHTML = `<tr><td colspan="7" class="empty">No items found</td></tr>`;
+      document.getElementById('pagination').innerHTML = '';
+      return;
+    }
+
+    body.innerHTML = items.map(item => `
+      <tr style="cursor:pointer" onclick="showDetail(${item.id})">
+        <td class="sku">${esc(item.sku)}</td>
+        <td>${esc(item.name)}</td>
+        <td><span class="category-badge cat-${item.category}">${formatCategory(item.category)}</span></td>
+        <td class="stock-level ${stockClass(item)}">${item.quantity}</td>
+        <td class="price">$${parseFloat(item.unit_price).toFixed(2)}</td>
+        <td>${esc(item.location)}</td>
+        <td>
+          ${canEdit() ? `<button class="btn btn-sm" onclick="event.stopPropagation(); openEditModalFor(${item.id})">Edit</button>` : ''}
+        </td>
+      </tr>
+    `).join('');
+
+    const totalPages = Math.ceil(totalItems / pageSize);
+    document.getElementById('pagination').innerHTML = `
+      <span>Showing ${items.length} of ${totalItems} items</span>
+      <div class="page-buttons">
+        <button class="btn btn-sm" ${currentPage <= 1 ? 'disabled' : ''} onclick="goPage(${currentPage - 1})">← Prev</button>
+        <span style="padding: 4px 8px">Page ${currentPage} of ${totalPages}</span>
+        <button class="btn btn-sm" ${currentPage >= totalPages ? 'disabled' : ''} onclick="goPage(${currentPage + 1})">Next →</button>
+      </div>
+    `;
+  }
+
+  function filterList(items) {
+    const search = document.getElementById('searchInput').value.toLowerCase();
+    const cat = document.getElementById('categoryFilter').value;
+
+    return items.filter(item => {
+      const matchSearch = !search || item.name.toLowerCase().includes(search) || item.sku.toLowerCase().includes(search);
+      const matchCat = !cat || item.category === cat;
+      return matchSearch && matchCat;
+    });
+  }
+
+  function filterItems() { renderItems(); }
+
+  function goPage(page) {
+    currentPage = page;
+    loadItems();
+  }
+
+  // ─── Detail Modal ───────────────────────────────────────
+
+  async function showDetail(id) {
+    viewingItemId = id;
+    try {
+      const res = await fetch(`${API}/api/items/${id}`);
+      const json = await res.json();
+      const item = json.data;
+
+      document.getElementById('detailTitle').textContent = item.name;
+      document.getElementById('detailGrid').innerHTML = `
+        <div class="detail-item"><div class="label">SKU</div><div class="value sku">${esc(item.sku)}</div></div>
+        <div class="detail-item"><div class="label">Category</div><div class="value"><span class="category-badge cat-${item.category}">${formatCategory(item.category)}</span></div></div>
+        <div class="detail-item"><div class="label">Quantity</div><div class="value stock-level ${stockClass(item)}">${item.quantity}</div></div>
+        <div class="detail-item"><div class="label">Unit Price</div><div class="value price">$${parseFloat(item.unit_price).toFixed(2)}</div></div>
+        <div class="detail-item"><div class="label">Reorder At</div><div class="value">${item.reorder_threshold}</div></div>
+        <div class="detail-item"><div class="label">Location</div><div class="value">${esc(item.location)}</div></div>
+        <div class="detail-item" style="grid-column:1/-1"><div class="label">Description</div><div class="value">${esc(item.description || '—')}</div></div>
+      `;
+
+      document.getElementById('editBtn').style.display = canEdit() ? '' : 'none';
+      document.getElementById('deleteBtn').style.display = isAdmin() ? '' : 'none';
+      openModal('detailModal');
+    } catch (e) {
+      toast('Failed to load item details', 'error');
+    }
+  }
+
+  async function deleteItem() {
+    if (!confirm('Delete this item?')) return;
+    try {
+      const res = await fetch(`${API}/api/items/${viewingItemId}`, {
+        method: 'DELETE',
+        headers: authHeaders(),
+      });
+      const json = await res.json();
+      if (json.error) { toast(json.error, 'error'); return; }
+      toast('Item deleted', 'success');
+      closeModal('detailModal');
+      loadAll();
+    } catch (e) {
+      toast('Delete failed: ' + e.message, 'error');
+    }
+  }
+
+  // ─── Add/Edit Form ─────────────────────────────────────
+
+  function openAddModal() {
+    editingItemId = null;
+    document.getElementById('formTitle').textContent = 'Add Item';
+    document.getElementById('formSubmitBtn').textContent = 'Create';
+    document.getElementById('itemForm').reset();
+    document.getElementById('fSku').disabled = false;
+    openModal('formModal');
+  }
+
+  async function openEditModalFor(id) {
+    try {
+      const res = await fetch(`${API}/api/items/${id}`);
+      const json = await res.json();
+      const item = json.data;
+      openEditModalWith(item);
+    } catch (e) {
+      toast('Failed to load item', 'error');
+    }
+  }
+
+  function openEditModal() {
+    // From detail view
+    closeModal('detailModal');
+    openEditModalFor(viewingItemId);
+  }
+
+  function openEditModalWith(item) {
+    editingItemId = item.id;
+    document.getElementById('formTitle').textContent = 'Edit Item';
+    document.getElementById('formSubmitBtn').textContent = 'Save Changes';
+    document.getElementById('fSku').value = item.sku;
+    document.getElementById('fSku').disabled = true;
+    document.getElementById('fName').value = item.name;
+    document.getElementById('fDesc').value = item.description || '';
+    document.getElementById('fCategory').value = item.category;
+    document.getElementById('fQty').value = item.quantity;
+    document.getElementById('fPrice').value = parseFloat(item.unit_price);
+    document.getElementById('fReorder').value = item.reorder_threshold;
+    document.getElementById('fLocation').value = item.location;
+    document.getElementById('fSupplier').value = item.supplier_id || '';
+    openModal('formModal');
+  }
+
+  async function submitItem(e) {
+    e.preventDefault();
+
+    const body = {
+      name: document.getElementById('fName').value,
+      description: document.getElementById('fDesc').value,
+      category: document.getElementById('fCategory').value,
+      quantity: parseInt(document.getElementById('fQty').value),
+      unitPrice: parseFloat(document.getElementById('fPrice').value),
+      reorderThreshold: parseInt(document.getElementById('fReorder').value),
+      location: document.getElementById('fLocation').value,
+      supplierId: parseInt(document.getElementById('fSupplier').value) || null,
+    };
+
+    if (!editingItemId) {
+      body.sku = document.getElementById('fSku').value;
+    }
+
+    try {
+      const url = editingItemId ? `${API}/api/items/${editingItemId}` : `${API}/api/items`;
+      const method = editingItemId ? 'PUT' : 'POST';
+
+      const res = await fetch(url, { method, headers: authHeaders(), body: JSON.stringify(body) });
+      const json = await res.json();
+
+      if (json.error) { toast(json.error, 'error'); return; }
+
+      toast(editingItemId ? 'Item updated' : 'Item created', 'success');
+      closeModal('formModal');
+      loadAll();
+    } catch (e) {
+      toast('Save failed: ' + e.message, 'error');
+    }
+  }
+
+  // ─── Tabs ───────────────────────────────────────────────
+
+  function switchTab(name) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+    document.getElementById('tab-inventory').style.display = name === 'inventory' ? '' : 'none';
+    document.getElementById('tab-low-stock').style.display = name === 'low-stock' ? '' : 'none';
+    document.getElementById('tab-reorder').style.display = name === 'reorder' ? '' : 'none';
+
+    if (name === 'low-stock') loadLowStock();
+    if (name === 'reorder') loadReorder();
+  }
+
+  // ─── Helpers ────────────────────────────────────────────
+
+  function canEdit() { return currentUser && ['admin', 'manager'].includes(currentUser.role); }
+  function isAdmin() { return currentUser && currentUser.role === 'admin'; }
+
+  function stockClass(item) {
+    if (item.quantity === 0) return 'stock-out';
+    if (item.quantity <= item.reorder_threshold) return 'stock-low';
+    return 'stock-ok';
+  }
+
+  function formatCategory(cat) {
+    return cat.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  }
+
+  function esc(str) {
+    const d = document.createElement('div');
+    d.textContent = str || '';
+    return d.innerHTML;
+  }
+
+  function openModal(id) { document.getElementById(id).classList.add('open'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+  // Close modals on overlay click
+  document.querySelectorAll('.modal-overlay').forEach(el => {
+    el.addEventListener('click', (e) => {
+      if (e.target === el) el.classList.remove('open');
+    });
+  });
+
+  function toast(msg, type = 'success') {
+    const container = document.getElementById('toasts');
+    const el = document.createElement('div');
+    el.className = `toast toast-${type}`;
+    el.textContent = msg;
+    container.appendChild(el);
+    setTimeout(() => el.remove(), 3000);
+  }
+
+  // ─── Init ───────────────────────────────────────────────
+
+  loadAll();
+</script>
+
+</body>
+</html>

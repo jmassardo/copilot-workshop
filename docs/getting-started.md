@@ -7,8 +7,9 @@ This guide walks you through setting up and running the Inventory Tracker API on
 Before you begin, make sure you have the following installed:
 
 - **Node.js 20+** — [Download here](https://nodejs.org/)
-- **PostgreSQL 15+** — [Download here](https://www.postgresql.org/download/)
 - **Git** — [Download here](https://git-scm.com/)
+
+> **No PostgreSQL installation required!** The project uses [PGlite](https://pglite.dev/), an embedded PostgreSQL engine that runs entirely inside Node.js via WebAssembly. All data is stored in a local `data/` directory.
 
 ## Step 1: Clone the Repository
 
@@ -31,38 +32,37 @@ Copy the example environment file:
 cp .env.example .env
 ```
 
-Edit `.env` with your database connection details:
+Edit `.env` with your preferences:
 
 ```
 PORT=3000
-DATABASE_URL=postgresql://your-user:your-password@localhost:5432/inventory
 JWT_SECRET=pick-a-strong-secret-here
 LOG_LEVEL=info
 ```
 
-## Step 4: Set Up the Database
+## Step 4: Start the Server
 
-Create the database and load the schema:
-
-```bash
-createdb inventory
-psql -d inventory -f sql/schema.sql
-psql -d inventory -f sql/seed-data.sql
-```
-
-## Step 5: Start the Server
+The database is automatically initialized on first startup — no manual setup needed:
 
 ```bash
 npm run dev
 ```
 
-You should see:
+On first run you’ll see:
 
 ```
+First run detected — initializing database...
+Schema created successfully
+Seed data loaded successfully
+Database initialization complete
 Inventory Tracker API running on port 3000
 ```
 
-## Step 6: Test the API
+Subsequent starts skip initialization and use the existing data.
+
+> **Starting fresh?** Delete the `data/` directory and restart to re-initialize.
+
+## Step 5: Test the API
 
 ```bash
 # Health check
@@ -81,7 +81,7 @@ curl -X POST http://localhost:3000/api/users/login \
 
 | Problem | Solution |
 |---------|----------|
-| `ECONNREFUSED` on database | Make sure PostgreSQL is running: `pg_isready` |
-| `relation does not exist` | Run the schema migration: `psql -d inventory -f sql/schema.sql` |
+| `ECONNREFUSED` on database | Delete the `data/` directory and restart to re-initialize |
+| `relation does not exist` | Delete the `data/` directory and restart to re-create the schema |
 | `JWT_SECRET` errors | Make sure `.env` has a `JWT_SECRET` value set |
 | Port already in use | Change the `PORT` in `.env` or stop the other process |

@@ -14,43 +14,43 @@ export interface InventoryItem {
   description: string;
   category: string;
   quantity: number;
-  unitPrice: number;
-  reorderThreshold: number;
-  supplierId: number;
+  unit_price: number;
+  reorder_threshold: number;
+  supplier_id: number;
   location: string;
-  createdAt: Date;
-  updatedAt: Date;
+  created_at: Date;
+  updated_at: Date;
 }
 
 export interface User {
   id: number;
   email: string;
-  passwordHash: string;
-  firstName: string;
-  lastName: string;
+  password_hash: string;
+  first_name: string;
+  last_name: string;
   role: UserRole;
-  lastLoginAt: Date | null;
-  createdAt: Date;
-  updatedAt: Date;
+  last_login_at: Date | null;
+  created_at: Date;
+  updated_at: Date;
 }
 
 export interface Supplier {
   id: number;
   name: string;
-  contactEmail: string;
+  contact_email: string;
   phone: string;
   address: string;
-  createdAt: Date;
+  created_at: Date;
 }
 
 export interface AuditLog {
   id: number;
-  userId: number;
+  user_id: number;
   action: string;
-  entityType: string;
-  entityId: number;
+  entity_type: string;
+  entity_id: number;
   details: Record<string, unknown>;
-  createdAt: Date;
+  created_at: Date;
 }
 
 // ─── Enums ──────────────────────────────────────────────────
@@ -122,7 +122,7 @@ export interface LoginRequest {
 
 export interface LoginResponse {
   token: string;
-  user: Omit<User, "passwordHash">;
+  user: Omit<User, "password_hash">;
 }
 
 // ─── Report Types ───────────────────────────────────────────
@@ -140,7 +140,7 @@ export interface ReorderItem {
   sku: string;
   name: string;
   quantity: number;
-  reorderThreshold: number;
-  supplierName: string;
-  supplierEmail: string;
+  reorder_threshold: number;
+  supplier_name: string;
+  supplier_email: string;
 }

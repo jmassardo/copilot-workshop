@@ -55,9 +55,9 @@ INSERT INTO inventory_items (sku, name, description, category, quantity, unit_pr
 --   viewer@example.com   -> viewer123
 
 INSERT INTO users (email, password_hash, first_name, last_name, role) VALUES
-    ('admin@example.com',   '$2b$12$LJ3m4ys3Lk0TSwHjfR8WaOaKsJGDBLt3rSOU.yyJMwuApcGxE8bKi', 'Admin',   'User',    'admin'),
-    ('manager@example.com', '$2b$12$LJ3m4ys3Lk0TSwHjfR8WaOaKsJGDBLt3rSOU.yyJMwuApcGxE8bKi', 'Sarah',   'Chen',    'manager'),
-    ('viewer@example.com',  '$2b$12$LJ3m4ys3Lk0TSwHjfR8WaOaKsJGDBLt3rSOU.yyJMwuApcGxE8bKi', 'Marcus',  'Johnson', 'viewer');
+    ('admin@example.com',   '$2b$12$oFGFSsI.4F9tZnUPoOSSEeIdWFf7mf60/pIEGTZyVruh98SIPQw0S', 'Admin',   'User',    'admin'),
+    ('manager@example.com', '$2b$12$PdVzYQ6WygUdo6xQuL2Aku.KviHhgBdJ2sU8Mfkl6sfOgX26/XKCm', 'Sarah',   'Chen',    'manager'),
+    ('viewer@example.com',  '$2b$12$3eI8oNjiiWR0xAyxhC4uOebTGJq4WcWkY5UoRqd54BzBoVciW4beO', 'Marcus',  'Johnson', 'viewer');
 
 -- ─── Sample Audit Entries ───────────────────────────────────
 

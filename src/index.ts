@@ -3,7 +3,9 @@ import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import dotenv from "dotenv";
+import path from "path";
 import { logger } from "./utils/logger";
+import { initDatabase } from "./db/init";
 import itemRoutes from "./routes/items";
 import userRoutes from "./routes/users";
 import reportRoutes from "./routes/reports";
@@ -16,7 +18,18 @@ const PORT = parseInt(process.env.PORT || "3000", 10);
 
 // ─── Security Middleware ────────────────────────────────────
 
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+        scriptSrcAttr: ["'unsafe-inline'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+      },
+    },
+  })
+);
 app.use(cors());
 
 // Rate limiting: 100 requests per 15 minutes per IP
@@ -58,6 +71,10 @@ app.get("/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
+// ─── Static UI ──────────────────────────────────────────────
+
+app.use(express.static(path.join(process.cwd(), "public")));
+
 // ─── 404 Handler ────────────────────────────────────────────
 
 app.use((_req, res) => {
@@ -81,8 +98,17 @@ app.use((err: Error, _req: express.Request, res: express.Response, _next: expres
 
 // ─── Start Server ───────────────────────────────────────────
 
-app.listen(PORT, () => {
-  logger.info(`Inventory Tracker API running on port ${PORT}`);
+async function start() {
+  await initDatabase();
+
+  app.listen(PORT, () => {
+    logger.info(`Inventory Tracker API running on port ${PORT}`);
+  });
+}
+
+start().catch((err) => {
+  logger.error("Failed to start server", { error: err.message });
+  process.exit(1);
 });
 
 export default app;

@@ -12,7 +12,6 @@ const router = Router();
  */
 router.get(
   "/inventory-summary",
-  authenticate,
   async (_req: Request, res: Response) => {
     try {
       const summary = await getInventorySummary();

@@ -24,7 +24,7 @@ The codebase intentionally includes multiple file types (TypeScript, SQL, Markdo
 - **`src/index.ts`** — Application entry point, Express server setup with security middleware
 - **`src/routes/`** — Route handlers for items, users, and reports
 - **`src/middleware/`** — JWT authentication and Zod request validation
-- **`src/db/`** — PostgreSQL connection pool and parameterized query functions
+- **`src/db/`** — Embedded PGlite database connection and parameterized query functions
 - **`src/types/`** — Shared TypeScript interfaces and types
 - **`src/utils/`** — Logging (Winston) and response helpers
 
@@ -49,14 +49,9 @@ npm install
 
 # Configure environment
 cp .env.example .env
-# Edit .env with your database connection details
+# Edit .env if you want to change defaults (no database setup needed!)
 
-# Set up the database
-createdb inventory
-psql -d inventory -f sql/schema.sql
-psql -d inventory -f sql/seed-data.sql
-
-# Start the development server
+# Start the development server (database auto-initializes on first run)
 npm run dev
 ```
 
@@ -86,7 +81,7 @@ All responses use the standard envelope: `{ data, error, meta }`. See [docs/api-
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
 | `PORT` | No | `3000` | Server port |
-| `DATABASE_URL` | Yes | — | PostgreSQL connection string |
+| `PGLITE_DATA_DIR` | No | `./data` | Directory for embedded database files |
 | `JWT_SECRET` | Yes | — | Secret key for JWT signing |
 | `LOG_LEVEL` | No | `info` | Logging level (debug, info, warn, error) |
 
