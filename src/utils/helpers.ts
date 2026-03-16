@@ -39,8 +39,23 @@ export function calculatePagination(
 
 /**
  * Validate that a string is a positive integer (for URL params like :id).
+ * Returns a helpful error message if invalid, or null if valid.
  */
 export function isValidId(value: string): boolean {
   const num = Number(value);
   return Number.isInteger(num) && num > 0;
+}
+
+/**
+ * Build a human-readable error message for invalid IDs.
+ */
+export function invalidIdMessage(paramName: string, value: string): string {
+  if (!/^\d+$/.test(value)) {
+    return `${paramName} must be a number, got '${value}'`;
+  }
+  const num = Number(value);
+  if (num <= 0) {
+    return `${paramName} must be a positive integer, got ${num}`;
+  }
+  return `Invalid ${paramName}: ${value}`;
 }
