@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import {
   getAllItems,
   getItemById,
+  getItemBySku,
   createItem,
   updateItem,
   deleteItem,
@@ -84,6 +85,12 @@ router.post(
   validate(CreateItemSchema),
   async (req: Request, res: Response) => {
     try {
+      const existing = await getItemBySku(req.body.sku);
+      if (existing) {
+        res.status(409).json(buildResponse(null, `An item with SKU '${req.body.sku}' already exists (item #${existing.id}: ${existing.name})`));
+        return;
+      }
+
       const item = await createItem(req.body);
       logger.info("Item created", { sku: item.sku, id: item.id });
       res.status(201).json(buildResponse(item));
