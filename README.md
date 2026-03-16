@@ -1,5 +1,11 @@
 # Inventory Tracker API
 
+[![Node.js](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen)](https://nodejs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue)](https://www.typescriptlang.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Express](https://img.shields.io/badge/Express-4.x-lightgrey)](https://expressjs.com/)
+[![PGlite](https://img.shields.io/badge/PGlite-embedded_PostgreSQL-336791)](https://electric-sql.com/product/pglite)
+
 A lightweight REST API for managing product inventory, built with Node.js, TypeScript, and Express. Uses PostgreSQL for data storage.
 
 > **Workshop repo** — This repository is the companion project for the [GitHub Copilot: Context Mastery & Beyond Developers](docs/workshop-syllabus.md) hands-on workshop. Clone it before the session starts.
