@@ -11,6 +11,7 @@ import { query } from "./db/connection";
 import itemRoutes from "./routes/items";
 import userRoutes from "./routes/users";
 import reportRoutes from "./routes/reports";
+import supplierRoutes from "./routes/suppliers";
 
 // Load environment variables
 dotenv.config();
@@ -74,6 +75,7 @@ app.use((req, _res, next) => {
 app.use("/api/items", itemRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/reports", reportRoutes);
+app.use("/api/suppliers", supplierRoutes);
 
 // Health check
 app.get("/health", async (_req, res) => {

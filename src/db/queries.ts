@@ -174,6 +174,12 @@ export async function getItemCountByCategory(): Promise<Record<string, number>> 
 
 // ─── Supplier Queries ─────────────────────────────────────
 
+export async function getAllSuppliers(): Promise<Supplier[]> {
+  return query<Supplier>(
+    "SELECT * FROM suppliers ORDER BY name ASC"
+  );
+}
+
 export async function getSupplierById(
   id: number
 ): Promise<Supplier | null> {
