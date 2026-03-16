@@ -519,12 +519,13 @@
             <th>Category</th>
             <th>Qty</th>
             <th>Price</th>
+            <th>Supplier</th>
             <th>Location</th>
             <th></th>
           </tr>
         </thead>
         <tbody id="itemsBody">
-          <tr><td colspan="7" class="loading"><div class="spinner"></div><br>Loading inventory...</td></tr>
+          <tr><td colspan="8" class="loading"><div class="spinner"></div><br>Loading inventory...</td></tr>
         </tbody>
       </table>
       <div class="pagination" id="pagination"></div>
@@ -754,7 +755,7 @@
       renderItems();
     } catch (e) {
       document.getElementById('itemsBody').innerHTML =
-        `<tr><td colspan="7" class="empty">Failed to load items</td></tr>`;
+        `<tr><td colspan="8" class="empty">Failed to load items</td></tr>`;
     }
   }
 
@@ -872,7 +873,7 @@
     let items = filterList(allItems);
 
     if (items.length === 0) {
-      body.innerHTML = `<tr><td colspan="7" class="empty">
+      body.innerHTML = `<tr><td colspan="8" class="empty">
         <div style="font-size:48px;margin-bottom:12px">📭</div>
         <div style="font-size:16px;font-weight:500;margin-bottom:4px">No items found</div>
         <div style="font-size:13px">Try adjusting your search or filter criteria</div>
@@ -888,6 +889,7 @@
         <td><span class="category-badge cat-${item.category}">${formatCategory(item.category)}</span></td>
         <td class="stock-level ${stockClass(item)}">${item.quantity}</td>
         <td class="price">$${parseFloat(item.unit_price).toFixed(2)}</td>
+        <td>${esc(item.supplier_name || '—')}</td>
         <td>${esc(item.location)}</td>
         <td>
           ${canEdit() ? `<button class="btn btn-sm" onclick="event.stopPropagation(); openEditModalFor(${item.id})">Edit</button>` : ''}

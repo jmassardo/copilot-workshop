@@ -20,13 +20,14 @@ export async function getAllItems(
 ): Promise<{ items: InventoryItem[]; total: number }> {
   const offset = (page - 1) * pageSize;
 
-  const whereClause = category ? "WHERE category = $3" : "";
+  const whereClause = category ? "WHERE i.category = $3" : "";
   const params: unknown[] = category ? [pageSize, offset, category] : [pageSize, offset];
 
   const items = await query<InventoryItem>(
-    `SELECT * FROM inventory_items
+    `SELECT i.*, s.name as supplier_name FROM inventory_items i
+     LEFT JOIN suppliers s ON i.supplier_id = s.id
      ${whereClause}
-     ORDER BY name ASC
+     ORDER BY i.name ASC
      LIMIT $1 OFFSET $2`,
     params
   );
