@@ -98,6 +98,32 @@ router.post(
 );
 
 /**
+ * GET /api/users/me
+ * Get the authenticated user's profile.
+ */
+router.get(
+  "/me",
+  authenticate,
+  async (req: Request, res: Response) => {
+    try {
+      const userId = (req as any).user.id;
+      const user = await getUserById(userId);
+
+      if (!user) {
+        res.status(404).json(buildResponse(null, "User not found"));
+        return;
+      }
+
+      const { password_hash: _, ...safeUser } = user;
+      res.json(buildResponse(safeUser));
+    } catch (err) {
+      logger.error("Failed to fetch profile", { error: err });
+      res.status(500).json(buildResponse(null, "Internal server error"));
+    }
+  }
+);
+
+/**
  * PUT /api/users/password
  * Change the authenticated user's password.
  */
