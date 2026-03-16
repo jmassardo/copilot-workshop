@@ -7,6 +7,7 @@ import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import { logger } from "./utils/logger";
 import { initDatabase } from "./db/init";
+import { query } from "./db/connection";
 import itemRoutes from "./routes/items";
 import userRoutes from "./routes/users";
 import reportRoutes from "./routes/reports";
@@ -75,8 +76,21 @@ app.use("/api/users", userRoutes);
 app.use("/api/reports", reportRoutes);
 
 // Health check
-app.get("/health", (_req, res) => {
-  res.json({ status: "ok", timestamp: new Date().toISOString() });
+app.get("/health", async (_req, res) => {
+  try {
+    const result = await query<{ ok: number }>("SELECT 1 as ok");
+    res.json({
+      status: "ok",
+      timestamp: new Date().toISOString(),
+      database: result.length > 0 ? "connected" : "error",
+    });
+  } catch (err) {
+    res.status(503).json({
+      status: "degraded",
+      timestamp: new Date().toISOString(),
+      database: "disconnected",
+    });
+  }
 });
 
 // ─── Static UI ──────────────────────────────────────────────
