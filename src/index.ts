@@ -4,6 +4,7 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import dotenv from "dotenv";
 import path from "path";
+import { v4 as uuidv4 } from "uuid";
 import { logger } from "./utils/logger";
 import { initDatabase } from "./db/init";
 import itemRoutes from "./routes/items";
@@ -50,6 +51,13 @@ app.use(limiter);
 
 app.use(express.json({ limit: "10kb" }));
 
+// ─── Request ID ──────────────────────────────────────────
+
+app.use((req, _res, next) => {
+  (req as any).requestId = req.headers["x-request-id"] as string || uuidv4();
+  next();
+});
+
 // ─── Request Logging ────────────────────────────────────────
 
 app.use((req, _res, next) => {
@@ -78,21 +86,23 @@ app.use(express.static(path.join(process.cwd(), "public")));
 // ─── 404 Handler ────────────────────────────────────────────
 
 app.use((_req, res) => {
+  const requestId = (_req as any).requestId || "";
   res.status(404).json({
     data: null,
     error: "Endpoint not found",
-    meta: { timestamp: new Date().toISOString(), requestId: "" },
+    meta: { timestamp: new Date().toISOString(), requestId },
   });
 });
 
 // ─── Error Handler ──────────────────────────────────────────
 
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  logger.error("Unhandled error", { error: err.message, stack: err.stack });
+  const requestId = (_req as any).requestId || "";
+  logger.error("Unhandled error", { error: err.message, stack: err.stack, requestId });
   res.status(500).json({
     data: null,
     error: "Internal server error",
-    meta: { timestamp: new Date().toISOString(), requestId: "" },
+    meta: { timestamp: new Date().toISOString(), requestId },
   });
 });
 
