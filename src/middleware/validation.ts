@@ -55,6 +55,7 @@ export const CreateItemSchema = z.object({
   reorderThreshold: z.number().int().min(0),
   supplierId: z.number().int().positive(),
   location: z.string().min(1).max(100),
+  notes: z.string().max(2000).default(""),
 });
 
 export const UpdateItemSchema = z.object({
@@ -73,6 +74,7 @@ export const UpdateItemSchema = z.object({
   unitPrice: z.number().positive().optional(),
   reorderThreshold: z.number().int().min(0).optional(),
   location: z.string().min(1).max(100).optional(),
+  notes: z.string().max(2000).optional(),
 });
 
 export const CreateUserSchema = z.object({

@@ -18,6 +18,7 @@ export interface InventoryItem {
   reorder_threshold: number;
   supplier_id: number;
   location: string;
+  notes: string;
   created_at: Date;
   updated_at: Date;
 }
@@ -95,6 +96,7 @@ export interface CreateItemRequest {
   reorderThreshold: number;
   supplierId: number;
   location: string;
+  notes?: string;
 }
 
 export interface UpdateItemRequest {
@@ -105,6 +107,7 @@ export interface UpdateItemRequest {
   unitPrice?: number;
   reorderThreshold?: number;
   location?: string;
+  notes?: string;
 }
 
 export interface CreateUserRequest {
