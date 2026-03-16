@@ -911,6 +911,7 @@
         <div class="detail-item"><div class="label">Reorder At</div><div class="value">${item.reorder_threshold}</div></div>
         <div class="detail-item"><div class="label">Location</div><div class="value">${esc(item.location)}</div></div>
         <div class="detail-item" style="grid-column:1/-1"><div class="label">Description</div><div class="value">${esc(item.description || '—')}</div></div>
+        <div class="detail-item" style="grid-column:1/-1"><div class="label">Last Updated</div><div class="value" style="font-size:13px;color:var(--text-muted)">${item.updated_at ? new Date(item.updated_at).toLocaleString() : '—'}</div></div>
       `;
 
       document.getElementById('editBtn').style.display = canEdit() ? '' : 'none';
