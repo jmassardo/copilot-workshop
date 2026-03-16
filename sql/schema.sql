@@ -38,6 +38,7 @@ CREATE TABLE IF NOT EXISTS inventory_items (
     reorder_threshold   INTEGER         NOT NULL DEFAULT 0 CHECK (reorder_threshold >= 0),
     supplier_id         INTEGER         REFERENCES suppliers(id) ON DELETE SET NULL,
     location            VARCHAR(100)    NOT NULL DEFAULT '',
+    notes               TEXT            DEFAULT '',
     created_at          TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
     updated_at          TIMESTAMPTZ     NOT NULL DEFAULT NOW()
 );

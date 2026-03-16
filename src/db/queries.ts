@@ -47,8 +47,8 @@ export async function createItem(
   const rows = await query<InventoryItem>(
     `INSERT INTO inventory_items
        (sku, name, description, category, quantity, unit_price,
-        reorder_threshold, supplier_id, location)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        reorder_threshold, supplier_id, location, notes)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
      RETURNING *`,
     [
       item.sku,
@@ -60,6 +60,7 @@ export async function createItem(
       item.reorderThreshold,
       item.supplierId,
       item.location,
+      item.notes || "",
     ]
   );
   return rows[0];
@@ -101,6 +102,10 @@ export async function updateItem(
   if (updates.location !== undefined) {
     fields.push(`location = $${paramIndex++}`);
     values.push(updates.location);
+  }
+  if (updates.notes !== undefined) {
+    fields.push(`notes = $${paramIndex++}`);
+    values.push(updates.notes);
   }
 
   if (fields.length === 0) return getItemById(id);
