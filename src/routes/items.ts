@@ -25,8 +25,9 @@ router.get("/", async (req: Request, res: Response) => {
   try {
     const page = Math.max(1, parseInt(req.query.page as string) || 1);
     const pageSize = Math.min(100, Math.max(1, parseInt(req.query.pageSize as string) || 20));
+    const category = req.query.category as string | undefined;
 
-    const { items, total } = await getAllItems(page, pageSize);
+    const { items, total } = await getAllItems(page, pageSize, category);
     const pagination = calculatePagination(page, pageSize, total);
 
     res.json(buildResponse(items, null, pagination));

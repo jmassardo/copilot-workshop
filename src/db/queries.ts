@@ -14,19 +14,27 @@ import {
 
 export async function getAllItems(
   page: number = 1,
-  pageSize: number = 20
+  pageSize: number = 20,
+  category?: string
 ): Promise<{ items: InventoryItem[]; total: number }> {
   const offset = (page - 1) * pageSize;
 
+  const whereClause = category ? "WHERE category = $3" : "";
+  const params: unknown[] = category ? [pageSize, offset, category] : [pageSize, offset];
+
   const items = await query<InventoryItem>(
     `SELECT * FROM inventory_items
+     ${whereClause}
      ORDER BY name ASC
      LIMIT $1 OFFSET $2`,
-    [pageSize, offset]
+    params
   );
 
+  const countParams: unknown[] = category ? [category] : [];
+  const countWhere = category ? "WHERE category = $1" : "";
   const countResult = await queryOne<{ count: string }>(
-    "SELECT COUNT(*) as count FROM inventory_items"
+    `SELECT COUNT(*) as count FROM inventory_items ${countWhere}`,
+    countParams
   );
   const total = parseInt(countResult?.count || "0", 10);
 
