@@ -238,6 +238,9 @@
 
     tr:hover td { background: rgba(88,166,255,0.04); }
 
+    tr.row-out-of-stock td { background: rgba(248,81,73,0.06); }
+    tr.row-out-of-stock:hover td { background: rgba(248,81,73,0.12); }
+
     .sku {
       font-family: "SF Mono", SFMono-Regular, Consolas, monospace;
       font-size: 13px;
@@ -875,7 +878,7 @@
     }
 
     body.innerHTML = items.map(item => `
-      <tr style="cursor:pointer" onclick="showDetail(${item.id})">
+      <tr class="${item.quantity === 0 ? 'row-out-of-stock' : ''}" style="cursor:pointer" onclick="showDetail(${item.id})">
         <td class="sku">${esc(item.sku)}</td>
         <td>${esc(item.name)}</td>
         <td><span class="category-badge cat-${item.category}">${formatCategory(item.category)}</span></td>
