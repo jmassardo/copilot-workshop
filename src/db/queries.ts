@@ -41,6 +41,15 @@ export async function getItemById(
   );
 }
 
+export async function getItemBySku(
+  sku: string
+): Promise<InventoryItem | null> {
+  return queryOne<InventoryItem>(
+    "SELECT * FROM inventory_items WHERE sku = $1",
+    [sku]
+  );
+}
+
 export async function createItem(
   item: CreateItemRequest
 ): Promise<InventoryItem> {
