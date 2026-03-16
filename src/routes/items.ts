@@ -4,6 +4,7 @@ import {
   getItemById,
   getItemBySku,
   getSupplierById,
+  getItemCountByCategory,
   createItem,
   updateItem,
   deleteItem,
@@ -47,6 +48,20 @@ router.get("/low-stock", authenticate, async (_req: Request, res: Response) => {
     res.json(buildResponse(items));
   } catch (err) {
     logger.error("Failed to fetch low stock items", { error: err });
+    res.status(500).json(buildResponse(null, "Internal server error"));
+  }
+});
+
+/**
+ * GET /api/items/count-by-category
+ * Returns item count grouped by category (public).
+ */
+router.get("/count-by-category", async (_req: Request, res: Response) => {
+  try {
+    const counts = await getItemCountByCategory();
+    res.json(buildResponse(counts));
+  } catch (err) {
+    logger.error("Failed to fetch category counts", { error: err });
     res.status(500).json(buildResponse(null, "Internal server error"));
   }
 });
