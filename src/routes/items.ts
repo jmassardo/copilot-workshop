@@ -11,7 +11,7 @@ import {
 } from "../db/queries";
 import { authenticate, authorize } from "../middleware/auth";
 import { validate, CreateItemSchema, UpdateItemSchema } from "../middleware/validation";
-import { buildResponse, calculatePagination, isValidId } from "../utils/helpers";
+import { buildResponse, calculatePagination, isValidId, invalidIdMessage } from "../utils/helpers";
 import { logger } from "../utils/logger";
 
 const router = Router();
@@ -57,7 +57,7 @@ router.get("/low-stock", authenticate, async (_req: Request, res: Response) => {
 router.get("/:id", async (req: Request, res: Response) => {
   try {
     if (!isValidId(req.params.id)) {
-      res.status(400).json(buildResponse(null, "Invalid item ID"));
+      res.status(400).json(buildResponse(null, invalidIdMessage("item ID", req.params.id)));
       return;
     }
 
@@ -122,7 +122,7 @@ router.put(
   async (req: Request, res: Response) => {
     try {
       if (!isValidId(req.params.id)) {
-        res.status(400).json(buildResponse(null, "Invalid item ID"));
+        res.status(400).json(buildResponse(null, invalidIdMessage("item ID", req.params.id)));
         return;
       }
 
@@ -153,7 +153,7 @@ router.delete(
   async (req: Request, res: Response) => {
     try {
       if (!isValidId(req.params.id)) {
-        res.status(400).json(buildResponse(null, "Invalid item ID"));
+        res.status(400).json(buildResponse(null, invalidIdMessage("item ID", req.params.id)));
         return;
       }
 
