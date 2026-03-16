@@ -3,6 +3,7 @@ import {
   getAllItems,
   getItemById,
   getItemBySku,
+  getSupplierById,
   createItem,
   updateItem,
   deleteItem,
@@ -89,6 +90,14 @@ router.post(
       if (existing) {
         res.status(409).json(buildResponse(null, `An item with SKU '${req.body.sku}' already exists (item #${existing.id}: ${existing.name})`));
         return;
+      }
+
+      if (req.body.supplierId) {
+        const supplier = await getSupplierById(req.body.supplierId);
+        if (!supplier) {
+          res.status(400).json(buildResponse(null, `Supplier with ID ${req.body.supplierId} does not exist`));
+          return;
+        }
       }
 
       const item = await createItem(req.body);

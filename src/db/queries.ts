@@ -7,6 +7,7 @@ import {
   CreateUserRequest,
   InventorySummary,
   ReorderItem,
+  Supplier,
 } from "../types";
 
 // ─── Item Queries ───────────────────────────────────────────
@@ -146,6 +147,17 @@ export async function getLowStockItems(): Promise<InventoryItem[]> {
     `SELECT * FROM inventory_items
      WHERE quantity <= reorder_threshold
      ORDER BY quantity ASC`
+  );
+}
+
+// ─── Supplier Queries ─────────────────────────────────────
+
+export async function getSupplierById(
+  id: number
+): Promise<Supplier | null> {
+  return queryOne<Supplier>(
+    "SELECT * FROM suppliers WHERE id = $1",
+    [id]
   );
 }
 
