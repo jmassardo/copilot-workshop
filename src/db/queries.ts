@@ -8,6 +8,7 @@ import {
   InventorySummary,
   ReorderItem,
   Supplier,
+  AuditLog,
 } from "../types";
 
 // ─── Item Queries ───────────────────────────────────────────
@@ -269,5 +270,16 @@ export async function getReorderReport(): Promise<ReorderItem[]> {
      JOIN suppliers s ON i.supplier_id = s.id
      WHERE i.quantity <= i.reorder_threshold
      ORDER BY (i.quantity::float / NULLIF(i.reorder_threshold, 0)) ASC`
+  );
+}
+
+// ─── Audit Log Queries ──────────────────────────────────────
+
+export async function getAuditLogForItem(itemId: number): Promise<AuditLog[]> {
+  return query<AuditLog>(
+    `SELECT * FROM audit_log
+     WHERE entity_type = 'inventory_item' AND entity_id = $1
+     ORDER BY created_at DESC`,
+    [itemId]
   );
 }

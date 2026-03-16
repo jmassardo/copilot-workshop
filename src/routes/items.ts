@@ -5,6 +5,7 @@ import {
   getItemBySku,
   getSupplierById,
   getItemCountByCategory,
+  getAuditLogForItem,
   createItem,
   updateItem,
   deleteItem,
@@ -62,6 +63,31 @@ router.get("/count-by-category", async (_req: Request, res: Response) => {
     res.json(buildResponse(counts));
   } catch (err) {
     logger.error("Failed to fetch category counts", { error: err });
+    res.status(500).json(buildResponse(null, "Internal server error"));
+  }
+});
+
+/**
+ * GET /api/items/:id/history
+ * Get the audit log history for a specific item (auth required).
+ */
+router.get("/:id/history", authenticate, async (req: Request, res: Response) => {
+  try {
+    if (!isValidId(req.params.id)) {
+      res.status(400).json(buildResponse(null, invalidIdMessage("item ID", req.params.id)));
+      return;
+    }
+
+    const item = await getItemById(parseInt(req.params.id));
+    if (!item) {
+      res.status(404).json(buildResponse(null, "Item not found"));
+      return;
+    }
+
+    const history = await getAuditLogForItem(parseInt(req.params.id));
+    res.json(buildResponse(history));
+  } catch (err) {
+    logger.error("Failed to fetch item history", { error: err, id: req.params.id });
     res.status(500).json(buildResponse(null, "Internal server error"));
   }
 });
