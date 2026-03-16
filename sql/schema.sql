@@ -43,6 +43,7 @@ CREATE TABLE IF NOT EXISTS inventory_items (
 );
 
 CREATE INDEX idx_items_sku ON inventory_items(sku);
+CREATE INDEX idx_items_name ON inventory_items(name);
 CREATE INDEX idx_items_category ON inventory_items(category);
 CREATE INDEX idx_items_supplier ON inventory_items(supplier_id);
 CREATE INDEX idx_items_low_stock ON inventory_items(quantity, reorder_threshold)
