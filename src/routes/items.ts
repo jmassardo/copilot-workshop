@@ -185,6 +185,39 @@ router.put(
 );
 
 /**
+ * PATCH /api/items/:id
+ * Partially update an inventory item (admin or manager only).
+ * Unlike PUT, PATCH only requires the fields being changed.
+ */
+router.patch(
+  "/:id",
+  authenticate,
+  authorize("admin", "manager"),
+  validate(UpdateItemSchema),
+  async (req: Request, res: Response) => {
+    try {
+      if (!isValidId(req.params.id)) {
+        res.status(400).json(buildResponse(null, invalidIdMessage("item ID", req.params.id)));
+        return;
+      }
+
+      const item = await updateItem(parseInt(req.params.id), req.body);
+
+      if (!item) {
+        res.status(404).json(buildResponse(null, "Item not found"));
+        return;
+      }
+
+      logger.info("Item patched", { id: item.id });
+      res.json(buildResponse(item));
+    } catch (err) {
+      logger.error("Failed to patch item", { error: err, id: req.params.id });
+      res.status(500).json(buildResponse(null, "Internal server error"));
+    }
+  }
+);
+
+/**
  * DELETE /api/items/:id
  * Delete an item (admin only).
  */
