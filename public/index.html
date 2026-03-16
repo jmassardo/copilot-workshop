@@ -359,6 +359,21 @@
       gap: 8px;
     }
 
+    .toast-success { border-color: var(--green); color: var(--green); }
+    .toast-error { border-color: var(--red); color: var(--red); }
+
+    .toast-progress {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 3px;
+      border-radius: 0 0 var(--radius) var(--radius);
+      animation: shrink linear forwards;
+    }
+
+    .toast-success .toast-progress { background: var(--green); }
+    .toast-error .toast-progress { background: var(--red); }
+
     .toast {
       padding: 12px 20px;
       border-radius: var(--radius);
@@ -366,10 +381,15 @@
       animation: slideIn 0.2s ease-out;
       border: 1px solid var(--border);
       background: var(--surface);
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
     }
 
-    .toast-success { border-color: var(--green); color: var(--green); }
-    .toast-error { border-color: var(--red); color: var(--red); }
+    @keyframes shrink {
+      from { width: 100%; }
+      to { width: 0%; }
+    }
 
     @keyframes slideIn {
       from { transform: translateX(100%); opacity: 0; }
@@ -1066,13 +1086,20 @@
     });
   });
 
-  function toast(msg, type = 'success') {
+  function toast(msg, type = 'success', duration = 4000) {
     const container = document.getElementById('toasts');
     const el = document.createElement('div');
     el.className = `toast toast-${type}`;
     el.textContent = msg;
+
+    const progress = document.createElement('div');
+    progress.className = 'toast-progress';
+    progress.style.animationDuration = `${duration}ms`;
+    el.appendChild(progress);
+
+    el.addEventListener('click', () => el.remove());
     container.appendChild(el);
-    setTimeout(() => el.remove(), 3000);
+    setTimeout(() => el.remove(), duration);
   }
 
   // ─── Init ───────────────────────────────────────────────
