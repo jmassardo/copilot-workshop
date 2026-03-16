@@ -89,7 +89,7 @@ router.post(
       const token = generateToken(safeUser);
 
       logger.info("User logged in", { email: user.email });
-      res.json(buildResponse({ token, user: safeUser }));
+      res.json(buildResponse({ token, user: safeUser, role: user.role }));
     } catch (err) {
       logger.error("Login failed", { error: err });
       res.status(500).json(buildResponse(null, "Internal server error"));
