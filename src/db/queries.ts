@@ -158,6 +158,20 @@ export async function getLowStockItems(): Promise<InventoryItem[]> {
   );
 }
 
+export async function getItemCountByCategory(): Promise<Record<string, number>> {
+  const rows = await query<{ category: string; count: string }>(
+    `SELECT category, COUNT(*) as count
+     FROM inventory_items
+     GROUP BY category
+     ORDER BY category`
+  );
+  const counts: Record<string, number> = {};
+  for (const row of rows) {
+    counts[row.category] = parseInt(row.count, 10);
+  }
+  return counts;
+}
+
 // ─── Supplier Queries ─────────────────────────────────────
 
 export async function getSupplierById(
