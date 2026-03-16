@@ -872,7 +872,11 @@
     let items = filterList(allItems);
 
     if (items.length === 0) {
-      body.innerHTML = `<tr><td colspan="7" class="empty">No items found</td></tr>`;
+      body.innerHTML = `<tr><td colspan="7" class="empty">
+        <div style="font-size:48px;margin-bottom:12px">📭</div>
+        <div style="font-size:16px;font-weight:500;margin-bottom:4px">No items found</div>
+        <div style="font-size:13px">Try adjusting your search or filter criteria</div>
+      </td></tr>`;
       document.getElementById('pagination').innerHTML = '';
       return;
     }
