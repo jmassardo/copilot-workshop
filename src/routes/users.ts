@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import bcrypt from "bcrypt";
-import { getAllUsers, getUserByEmail, createUser, updateLastLogin } from "../db/queries";
+import { getAllUsers, getUserByEmail, getUserById, createUser, updateLastLogin, updatePassword } from "../db/queries";
 import { authenticate, authorize, generateToken } from "../middleware/auth";
 import { validate, CreateUserSchema, LoginSchema } from "../middleware/validation";
 import { buildResponse } from "../utils/helpers";
@@ -92,6 +92,53 @@ router.post(
       res.json(buildResponse({ token, user: safeUser, role: user.role }));
     } catch (err) {
       logger.error("Login failed", { error: err });
+      res.status(500).json(buildResponse(null, "Internal server error"));
+    }
+  }
+);
+
+/**
+ * PUT /api/users/password
+ * Change the authenticated user's password.
+ */
+router.put(
+  "/password",
+  authenticate,
+  async (req: Request, res: Response) => {
+    try {
+      const { currentPassword, newPassword } = req.body;
+
+      if (!currentPassword || !newPassword) {
+        res.status(400).json(buildResponse(null, "currentPassword and newPassword are required"));
+        return;
+      }
+
+      if (newPassword.length < 8) {
+        res.status(400).json(buildResponse(null, "New password must be at least 8 characters"));
+        return;
+      }
+
+      const userId = (req as any).user.id;
+      const user = await getUserById(userId);
+
+      if (!user) {
+        res.status(404).json(buildResponse(null, "User not found"));
+        return;
+      }
+
+      const validCurrent = await bcrypt.compare(currentPassword, user.password_hash);
+      if (!validCurrent) {
+        res.status(401).json(buildResponse(null, "Current password is incorrect"));
+        return;
+      }
+
+      const newHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+      await updatePassword(userId, newHash);
+
+      logger.info("Password changed", { userId });
+      res.json(buildResponse({ message: "Password changed successfully" }));
+    } catch (err) {
+      logger.error("Password change failed", { error: err });
       res.status(500).json(buildResponse(null, "Internal server error"));
     }
   }

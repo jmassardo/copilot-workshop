@@ -223,6 +223,10 @@ export async function updateLastLogin(userId: number): Promise<void> {
   await query("UPDATE users SET last_login_at = NOW() WHERE id = $1", [userId]);
 }
 
+export async function updatePassword(userId: number, passwordHash: string): Promise<void> {
+  await query("UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2", [passwordHash, userId]);
+}
+
 // ─── Report Queries ─────────────────────────────────────────
 
 export async function getInventorySummary(): Promise<InventorySummary> {
