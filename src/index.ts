@@ -12,9 +12,13 @@ import itemRoutes from "./routes/items";
 import userRoutes from "./routes/users";
 import reportRoutes from "./routes/reports";
 import supplierRoutes from "./routes/suppliers";
+import { validateEnv } from "./validateEnv";
 
 // Load environment variables
 dotenv.config();
+
+// Validate environment on startup
+validateEnv();
 
 const app = express();
 const PORT = parseInt(process.env.PORT || "3000", 10);
