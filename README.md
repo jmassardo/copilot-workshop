@@ -151,6 +151,7 @@ Example solutions for each are in the [`examples/`](examples/) directory.
 
 - [Getting Started](docs/getting-started.md) — Setup and first run
 - [API Reference](docs/api-reference.md) — All endpoints with examples
+- [User Guide](docs/user-guide.md) — How-to guide for warehouse managers
 - [Architecture](docs/architecture.md) — Design decisions and structure
 - [Workshop Syllabus](docs/workshop-syllabus.md) — Facilitator guide
 
