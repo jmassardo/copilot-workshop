@@ -6,15 +6,29 @@ This folder contains **example solutions** for the workshop exercises. Use these
 
 ### Instructions Files (Exercise 3 examples)
 
-| File | Type | For Role |
-|------|------|----------|
-| [copilot-instructions-developer.md](instructions/copilot-instructions-developer.md) | Repo-level | Developer |
-| [copilot-instructions-pm.md](instructions/copilot-instructions-pm.md) | Repo-level | Project/Product Manager |
-| [copilot-instructions-dba.md](instructions/copilot-instructions-dba.md) | Repo-level | DBA |
-| [docs-instructions.md](instructions/docs-instructions.md) | Scoped | Tech Writer |
-| [sql-instructions.md](instructions/sql-instructions.md) | Scoped | DBA |
-| [src-instructions.md](instructions/src-instructions.md) | Scoped | Developer |
-| [reports-instructions.md](instructions/reports-instructions.md) | Scoped | PM / Manager |
+#### Repo-Level Instructions
+
+These go in `.github/copilot-instructions.md` and apply to every Copilot interaction in the repo.
+
+| File | For Role |
+|------|----------|
+| [copilot-instructions-developer.md](instructions/copilot-instructions-developer.md) | Developer |
+| [copilot-instructions-pm.md](instructions/copilot-instructions-pm.md) | Project/Product Manager |
+| [copilot-instructions-dba.md](instructions/copilot-instructions-dba.md) | DBA |
+| [copilot-instructions-techwriter.md](instructions/copilot-instructions-techwriter.md) | Tech Writer |
+| [copilot-instructions-manager.md](instructions/copilot-instructions-manager.md) | Manager |
+
+#### Scoped Instructions
+
+These use `applyTo` front matter to auto-apply when working on matching files.
+
+| File | `applyTo` | For Role |
+|------|-----------|----------|
+| [docs-instructions.md](instructions/docs-instructions.md) | `docs/**/*.md` | Tech Writer |
+| [sql-instructions.md](instructions/sql-instructions.md) | `sql/**/*.sql` | DBA |
+| [src-instructions.md](instructions/src-instructions.md) | `src/**/*.ts` | Developer |
+| [reports-instructions.md](instructions/reports-instructions.md) | `reports/**` | PM |
+| [reviews-instructions.md](instructions/reviews-instructions.md) | `reviews/**` | Manager |
 
 ### Prompt Files (Exercise 4 examples)
 
@@ -25,13 +39,17 @@ This folder contains **example solutions** for the workshop exercises. Use these
 | [query-review.prompt.md](prompts/query-review.prompt.md) | DBA |
 | [api-docs.prompt.md](prompts/api-docs.prompt.md) | Tech Writer |
 | [team-update.prompt.md](prompts/team-update.prompt.md) | Manager |
+| [feature-spec.prompt.md](prompts/feature-spec.prompt.md) | Product Manager |
 
-### Chat Modes (Block 4 bonus examples)
+### Chat Modes (Block 4 examples)
 
 | File | Persona |
 |------|---------|
+| [developer.chatmode.md](chatmodes/developer.chatmode.md) | Developer |
+| [pm.chatmode.md](chatmodes/pm.chatmode.md) | Project Manager |
 | [tech-writer.chatmode.md](chatmodes/tech-writer.chatmode.md) | Technical Writer |
 | [dba.chatmode.md](chatmodes/dba.chatmode.md) | DBA Assistant |
+| [manager.chatmode.md](chatmodes/manager.chatmode.md) | Engineering Manager |
 
 ## How to Use These
 

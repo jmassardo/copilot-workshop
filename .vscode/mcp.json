@@ -1,0 +1,9 @@
+{
+  "servers": {
+    "github": {
+      "command": "gh",
+      "args": ["copilot", "mcp"],
+      "description": "GitHub MCP server — provides access to issues, PRs, repos, and more"
+    }
+  }
+}

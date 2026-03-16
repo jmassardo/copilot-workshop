@@ -19,8 +19,8 @@
 | 1:25–1:40 | **Break** | |
 | 1:40–2:10 | **Block 3: Instructions & Prompt Files** | Persistent context that travels with your repo |
 | 2:10–2:40 | **Block 4: Skills, Agents & MCP** | Extending what Copilot can do |
-| 2:40–2:50 | **Block 5: Putting It All Together** | Capstone exercise by role |
-| 2:50–3:00 | **Q&A + Wrap-Up** | Key takeaways, resources, next steps |
+| 2:40–2:55 | **Block 5: Putting It All Together** | Capstone exercise by role |
+| 2:55–3:05 | **Q&A + Wrap-Up** | Key takeaways, resources, next steps |
 
 ---
 
@@ -107,7 +107,7 @@ Each attendee picks **one** task from their actual role. **Choose your surface**
 |------|-------------|----------------|
 | **Project Manager** | "Create a project status report template with sections for risks, blockers, accomplishments, and next steps" | Open the repo on github.com → Copilot Chat → "What were the most significant changes to this repo in the last month?" |
 | **Product Manager** | "Draft user acceptance criteria for a feature that lets users export their data as CSV" | Open an issue → Copilot Chat → "Suggest acceptance criteria for this feature request" |
-| **Tech Writer** | "Write a getting-started guide for a CLI tool called `deploy-bot` that takes `--env` and `--version` flags" | Navigate to a code file on github.com → Copilot → "Explain this file so I can write documentation for it" |
+| **Tech Writer** | "Write a getting-started guide for a CLI tool called `inventory-cli` that takes `--env` and `--format` flags" | Navigate to a code file on github.com → Copilot → "Explain this file so I can write documentation for it" |
 | **DBA** | "Write a PostgreSQL query to find the top 10 largest tables by row count and disk usage" | Open a `.sql` file on github.com → Copilot → "Review this query for performance issues" |
 | **Manager** | "Draft a performance review self-assessment prompt covering impact, collaboration, and growth areas" | Open a PR → Copilot Chat → "Summarize this PR for a non-technical stakeholder" |
 | **Developer** | "Explain what this function does and suggest improvements" (select actual code in the repo) | Open a PR → Copilot Chat → "What are the riskiest changes in this PR?" |
@@ -186,7 +186,7 @@ Compare again. With `#codebase`, Copilot indexes the full workspace and should g
 
 **Step 4 — With explicit attachments**:
 Now ask:
-> "Summarize the architecture of this project #file:README.md #file:src/index.ts #file:package.json"
+> "Summarize the architecture of this project #file:README.md #file:src/index.ts #file:docs/architecture.md"
 
 Compare the specificity of this response vs. Step 3.
 
@@ -275,9 +275,9 @@ When generating or editing reports:
 
 | Role | File | `applyTo` | Content Ideas |
 |------|------|-----------|--------------|
-| **PM** | `docs/.instructions.md` | `docs/**` | Report format, status update template, stakeholder language |
+| **PM** | `reports/.instructions.md` | `reports/**` | Report format, status update template, stakeholder language |
 | **Tech Writer** | `docs/.instructions.md` | `docs/**/*.md` | Style guide rules, heading conventions, link format |
-| **DBA** | `sql/.instructions.md` | `**/*.sql` | Naming conventions, index guidelines, always include comments |
+| **DBA** | `sql/.instructions.md` | `sql/**/*.sql` | Naming conventions, index guidelines, always include comments |
 | **Developer** | `src/.instructions.md` | `src/**/*.ts` | Architecture patterns, error handling, import order |
 | **Manager** | `reviews/.instructions.md` | `reviews/**` | Performance review format, competency framework, tone |
 
@@ -378,7 +378,7 @@ Skills and agents extend what Copilot **can do**, not just what it **knows**. Th
 - DBA: `@workspace Show me all files that contain database queries`
 - Manager: `@workspace How many TODO comments are in the codebase and who wrote them?`
 
-#### Exercise 5: Agent Exploration (8 min)
+#### Exercise 5: Agent & Skill Exploration (8 min)
 
 > **Exercise guide**: [`exercises/exercise-5.md`](https://github.com/jmassardo/copilot-workshop/blob/main/exercises/exercise-5.md) in the workshop repo
 
@@ -426,11 +426,9 @@ Common MCP servers:
 {
   "servers": {
     "github": {
-      "command": "docker",
-      "args": ["run", "--rm", "-i", "ghcr.io/github/github-mcp-server"],
-      "env": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
-      }
+      "command": "gh",
+      "args": ["copilot", "mcp"],
+      "description": "GitHub MCP server — provides access to issues, PRs, repos, and more"
     }
   }
 }
@@ -516,12 +514,12 @@ Create scoped instructions for a specific file type or folder:
 
 | Role | Project Idea | Prompt Idea | Scoped Instructions |
 |------|-------------|------------|-------------------|
-| **PM** | Internal project tracker | `sprint-report.prompt.md` — generate sprint summary from PR activity | `reports/.instructions.md` — report formatting rules |
-| **Product Manager** | Customer feedback tool | `prd-draft.prompt.md` — draft PRD from a feature brief | `specs/.instructions.md` — spec writing conventions |
+| **PM** | Internal project tracker | `risk-assessment.prompt.md` — assess project risks from recent activity | `reports/.instructions.md` — report formatting rules |
+| **Product Manager** | Customer feedback tool | `user-story.prompt.md` — generate user stories from a feature brief | `specs/.instructions.md` — spec writing conventions |
 | **Tech Writer** | Developer documentation site | `release-notes.prompt.md` — generate release notes from changelog | `docs/.instructions.md` — documentation style guide |
-| **DBA** | Data warehouse | `migration-review.prompt.md` — review a migration script for safety | `migrations/.instructions.md` — migration conventions |
+| **DBA** | Data warehouse | `migration-review.prompt.md` — review a migration script for safety | `sql/.instructions.md` — SQL and migration conventions |
 | **Developer** | REST API service | `api-endpoint.prompt.md` — scaffold a new API endpoint | `src/.instructions.md` — code conventions |
-| **Manager** | Team operations repo | `weekly-digest.prompt.md` — summarize team activity into digest | `updates/.instructions.md` — communication format rules |
+| **Manager** | Team operations repo | `weekly-digest.prompt.md` — summarize team activity into digest | `reviews/.instructions.md` — communication format rules |
 
 ### Share Out (5 min)
 
@@ -529,7 +527,7 @@ Create scoped instructions for a specific file type or folder:
 
 ---
 
-## Q&A + Wrap-Up (15 min)
+## Q&A + Wrap-Up (10 min)
 
 ### Key Takeaways Slide
 

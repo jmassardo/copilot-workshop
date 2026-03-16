@@ -38,6 +38,11 @@ The Inventory Tracker API follows a standard layered architecture:
 
 ```
 copilot-workshop/
+├── .github/
+│   └── prompts/              # Reusable prompt files (created during workshop)
+├── .vscode/
+│   ├── extensions.json       # Recommended VS Code extensions
+│   └── mcp.json              # MCP server configuration
 ├── src/
 │   ├── index.ts              # Entry point, Express app setup
 │   ├── routes/
@@ -63,10 +68,16 @@ copilot-workshop/
 ├── docs/
 │   ├── getting-started.md    # Setup guide
 │   ├── api-reference.md      # Full API documentation
-│   └── architecture.md       # This file
+│   ├── architecture.md       # This file
+│   └── workshop-syllabus.md  # Full facilitator guide
+├── examples/
+│   ├── instructions/         # Example copilot instruction files
+│   ├── prompts/              # Example prompt files
+│   └── chatmodes/            # Example custom chat modes
+├── exercises/                # Workshop exercise guides
 ├── reports/                  # Report templates
 ├── reviews/                  # Performance review templates
-└── exercises/                # Workshop exercise guides
+└── specs/                    # Feature specifications (used in capstone)
 ```
 
 ## Design Decisions
