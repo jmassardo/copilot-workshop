@@ -1,0 +1,1316 @@
+openapi: 3.1.0
+info:
+  title: Inventory Tracker API
+  description: |
+    REST API for managing inventory items, suppliers, users, and reports.
+
+    ## Authentication
+    Most write operations and sensitive reads require a JWT Bearer token.
+    Obtain a token by calling `POST /api/users/login`.
+    Include it in subsequent requests as:
+    ```
+    Authorization: Bearer <token>
+    ```
+    Tokens expire after **8 hours**.
+
+    ## Roles
+    | Role    | Permissions |
+    |---------|-------------|
+    | admin   | Full CRUD on items and users, delete items |
+    | manager | Create and update items |
+    | viewer  | Read-only, low-stock and report endpoints |
+
+    ## Response Envelope
+    Every response uses the following envelope format:
+    ```json
+    {
+      "data": "<payload or null>",
+      "error": "<message or null>",
+      "meta": {
+        "timestamp": "2024-01-01T00:00:00.000Z",
+        "requestId": "uuid",
+        "pagination": { "page": 1, "pageSize": 20, "totalItems": 100, "totalPages": 5 }
+      }
+    }
+    ```
+  version: 1.0.0
+  contact:
+    name: Inventory Tracker
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+
+security: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # ─── Enums ─────────────────────────────────────────────────────
+    ItemCategory:
+      type: string
+      enum:
+        - electronics
+        - furniture
+        - office_supplies
+        - raw_materials
+        - finished_goods
+      example: electronics
+
+    UserRole:
+      type: string
+      enum:
+        - admin
+        - manager
+        - viewer
+      example: viewer
+
+    # ─── Core Models ───────────────────────────────────────────────
+    InventoryItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        sku:
+          type: string
+          example: ELEC-001
+        name:
+          type: string
+          example: Laptop Pro 15
+        description:
+          type: string
+          example: High-performance laptop with 16GB RAM
+        category:
+          $ref: '#/components/schemas/ItemCategory'
+        quantity:
+          type: integer
+          minimum: 0
+          example: 25
+        unit_price:
+          type: number
+          format: float
+          example: 1299.99
+        reorder_threshold:
+          type: integer
+          minimum: 0
+          example: 5
+        supplier_id:
+          type: integer
+          example: 2
+        location:
+          type: string
+          example: Warehouse A - Shelf 3
+        notes:
+          type: string
+          example: Handle with care
+        created_at:
+          type: string
+          format: date-time
+          example: '2024-01-15T10:30:00.000Z'
+        updated_at:
+          type: string
+          format: date-time
+          example: '2024-02-01T08:00:00.000Z'
+
+    Supplier:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: Acme Electronics
+        contact_email:
+          type: string
+          format: email
+          example: orders@acme.example.com
+        phone:
+          type: string
+          example: '+15551234567'
+        address:
+          type: string
+          example: 123 Main St, Springfield, IL 62701
+        created_at:
+          type: string
+          format: date-time
+          example: '2024-01-01T00:00:00.000Z'
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        email:
+          type: string
+          format: email
+          example: admin@example.com
+        first_name:
+          type: string
+          example: Alice
+        last_name:
+          type: string
+          example: Smith
+        role:
+          $ref: '#/components/schemas/UserRole'
+        last_login_at:
+          type: ["string", "null"]
+          format: date-time
+          example: '2024-03-10T12:00:00.000Z'
+        created_at:
+          type: string
+          format: date-time
+          example: '2024-01-01T00:00:00.000Z'
+        updated_at:
+          type: string
+          format: date-time
+          example: '2024-03-01T09:00:00.000Z'
+
+    AuditLog:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 42
+        user_id:
+          type: integer
+          example: 1
+        action:
+          type: string
+          example: UPDATE
+        entity_type:
+          type: string
+          example: inventory_item
+        entity_id:
+          type: integer
+          example: 5
+        details:
+          type: object
+          additionalProperties: true
+          example: { before: { quantity: 10 }, after: { quantity: 15 } }
+        created_at:
+          type: string
+          format: date-time
+          example: '2024-03-10T14:22:00.000Z'
+
+    # ─── Report Models ─────────────────────────────────────────────
+    InventorySummary:
+      type: object
+      properties:
+        totalItems:
+          type: integer
+          example: 23
+        totalValue:
+          type: number
+          format: float
+          example: 48750.50
+        lowStockCount:
+          type: integer
+          example: 4
+        outOfStockCount:
+          type: integer
+          example: 1
+        categoryCounts:
+          type: object
+          additionalProperties:
+            type: integer
+          example:
+            electronics: 8
+            furniture: 5
+            office_supplies: 6
+            raw_materials: 2
+            finished_goods: 2
+
+    ReorderItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 7
+        sku:
+          type: string
+          example: FURN-002
+        name:
+          type: string
+          example: Ergonomic Chair
+        quantity:
+          type: integer
+          example: 2
+        reorder_threshold:
+          type: integer
+          example: 5
+        supplier_name:
+          type: string
+          example: Office World
+        supplier_email:
+          type: string
+          format: email
+          example: orders@officeworld.example.com
+
+    CategoryCount:
+      type: object
+      properties:
+        category:
+          $ref: '#/components/schemas/ItemCategory'
+        count:
+          type: integer
+          example: 8
+
+    # ─── Request Bodies ────────────────────────────────────────────
+    CreateItemRequest:
+      type: object
+      required:
+        - sku
+        - name
+        - category
+        - quantity
+        - unitPrice
+        - reorderThreshold
+        - supplierId
+        - location
+      properties:
+        sku:
+          type: string
+          minLength: 3
+          maxLength: 50
+          example: ELEC-099
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+          example: Wireless Mouse
+        description:
+          type: string
+          maxLength: 2000
+          default: ''
+          example: Ergonomic wireless mouse with 2.4GHz connectivity
+        category:
+          $ref: '#/components/schemas/ItemCategory'
+        quantity:
+          type: integer
+          minimum: 0
+          example: 50
+        unitPrice:
+          type: number
+          format: float
+          exclusiveMinimum: 0
+          example: 29.99
+        reorderThreshold:
+          type: integer
+          minimum: 0
+          example: 10
+        supplierId:
+          type: integer
+          minimum: 1
+          example: 3
+        location:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: Warehouse B - Shelf 1
+        notes:
+          type: string
+          maxLength: 2000
+          default: ''
+          example: Bundle with keyboard if possible
+
+    UpdateItemRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+          example: Wireless Mouse Pro
+        description:
+          type: string
+          maxLength: 2000
+          example: Updated description
+        category:
+          $ref: '#/components/schemas/ItemCategory'
+        quantity:
+          type: integer
+          minimum: 0
+          example: 45
+        unitPrice:
+          type: number
+          format: float
+          exclusiveMinimum: 0
+          example: 34.99
+        reorderThreshold:
+          type: integer
+          minimum: 0
+          example: 8
+        location:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: Warehouse C - Shelf 2
+        notes:
+          type: string
+          maxLength: 2000
+          example: Updated notes
+
+    CreateUserRequest:
+      type: object
+      required:
+        - email
+        - password
+        - firstName
+        - lastName
+        - role
+      properties:
+        email:
+          type: string
+          format: email
+          example: jane.doe@example.com
+        password:
+          type: string
+          format: password
+          minLength: 8
+          maxLength: 128
+          example: secureP@ssw0rd
+        firstName:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: Jane
+        lastName:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: Doe
+        role:
+          $ref: '#/components/schemas/UserRole'
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: admin@example.com
+        password:
+          type: string
+          format: password
+          example: password123
+
+    ChangePasswordRequest:
+      type: object
+      required:
+        - currentPassword
+        - newPassword
+      properties:
+        currentPassword:
+          type: string
+          format: password
+          example: oldPassword123
+        newPassword:
+          type: string
+          format: password
+          minLength: 8
+          example: newSecureP@ss1
+
+    # ─── Response Wrappers ─────────────────────────────────────────
+    PaginationMeta:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        pageSize:
+          type: integer
+          example: 20
+        totalItems:
+          type: integer
+          example: 100
+        totalPages:
+          type: integer
+          example: 5
+
+    ApiMeta:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          example: '2024-03-10T14:22:00.000Z'
+        requestId:
+          type: string
+          format: uuid
+          example: a3bb189e-8bf9-3888-9912-ace4e6543002
+        pagination:
+          $ref: '#/components/schemas/PaginationMeta'
+
+    ErrorResponse:
+      type: object
+      properties:
+        data:
+          type: 'null'
+        error:
+          type: string
+          example: Item not found
+        meta:
+          $ref: '#/components/schemas/ApiMeta'
+
+    ValidationErrorResponse:
+      type: object
+      properties:
+        data:
+          type: 'null'
+        error:
+          type: string
+          example: Validation failed
+        meta:
+          type: object
+          properties:
+            timestamp:
+              type: string
+              format: date-time
+            requestId:
+              type: string
+            validationErrors:
+              type: array
+              items:
+                type: object
+                properties:
+                  field:
+                    type: string
+                    example: unitPrice
+                  message:
+                    type: string
+                    example: Number must be greater than 0
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid JWT token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            data: null
+            error: Unauthorized
+            meta:
+              timestamp: '2024-03-10T14:22:00.000Z'
+              requestId: a3bb189e-8bf9-3888-9912-ace4e6543002
+
+    Forbidden:
+      description: Authenticated but insufficient role
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            data: null
+            error: Forbidden
+            meta:
+              timestamp: '2024-03-10T14:22:00.000Z'
+              requestId: a3bb189e-8bf9-3888-9912-ace4e6543002
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    BadRequest:
+      description: Invalid request parameters or body
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationErrorResponse'
+
+    InternalServerError:
+      description: Unexpected server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            data: null
+            error: Internal server error
+            meta:
+              timestamp: '2024-03-10T14:22:00.000Z'
+              requestId: a3bb189e-8bf9-3888-9912-ace4e6543002
+
+    TooManyRequests:
+      description: Rate limit exceeded — 100 requests per 15 minutes per IP
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            data: null
+            error: Too many requests. Please try again later.
+            meta:
+              timestamp: '2024-03-10T14:22:00.000Z'
+              requestId: a3bb189e-8bf9-3888-9912-ace4e6543002
+
+  parameters:
+    ItemIdParam:
+      name: id
+      in: path
+      required: true
+      description: Numeric ID of the inventory item
+      schema:
+        type: integer
+        minimum: 1
+      example: 1
+
+    SupplierIdParam:
+      name: id
+      in: path
+      required: true
+      description: Numeric ID of the supplier
+      schema:
+        type: integer
+        minimum: 1
+      example: 1
+
+    PageParam:
+      name: page
+      in: query
+      description: Page number (1-based)
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+      example: 1
+
+    PageSizeParam:
+      name: pageSize
+      in: query
+      description: Number of items per page (1–100)
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+      example: 20
+
+    CategoryFilterParam:
+      name: category
+      in: query
+      description: Filter items by category
+      schema:
+        $ref: '#/components/schemas/ItemCategory'
+
+paths:
+  # ──────────────────────────────────────────────────────────────────
+  # Health
+  # ──────────────────────────────────────────────────────────────────
+  /health:
+    get:
+      summary: Health check
+      description: Returns the operational status of the API and its database connection.
+      operationId: getHealth
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  timestamp:
+                    type: string
+                    format: date-time
+                  database:
+                    type: string
+                    example: connected
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          description: Service is degraded (database unreachable)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: degraded
+                  timestamp:
+                    type: string
+                    format: date-time
+                  database:
+                    type: string
+                    example: disconnected
+
+  # ──────────────────────────────────────────────────────────────────
+  # Items
+  # ──────────────────────────────────────────────────────────────────
+  /api/items:
+    get:
+      summary: List inventory items
+      description: Returns a paginated list of all inventory items. No authentication required.
+      operationId: listItems
+      tags:
+        - Items
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PageSizeParam'
+        - $ref: '#/components/parameters/CategoryFilterParam'
+      responses:
+        '200':
+          description: Paginated list of inventory items
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/InventoryItem'
+                  error:
+                    type: 'null'
+                  meta:
+                    $ref: '#/components/schemas/ApiMeta'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      summary: Create an inventory item
+      description: Creates a new inventory item. Requires **admin** or **manager** role.
+      operationId: createItem
+      tags:
+        - Items
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateItemRequest'
+      responses:
+        '201':
+          description: Item created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/InventoryItem'
+                  error:
+                    type: 'null'
+                  meta:
+                    $ref: '#/components/schemas/ApiMeta'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          description: An item with the given SKU already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/items/low-stock:
+    get:
+      summary: List low-stock items
+      description: Returns all items whose quantity is at or below their reorder threshold. Requires authentication.
+      operationId: getLowStockItems
+      tags:
+        - Items
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of low-stock items
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/InventoryItem'
+                  error:
+                    type: 'null'
+                  meta:
+                    $ref: '#/components/schemas/ApiMeta'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/items/count-by-category:
+    get:
+      summary: Item count by category
+      description: Returns the number of inventory items grouped by category. No authentication required.
+      operationId: getItemCountByCategory
+      tags:
+        - Items
+      responses:
+        '200':
+          description: Item counts per category
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CategoryCount'
+                  error:
+                    type: 'null'
+                  meta:
+                    $ref: '#/components/schemas/ApiMeta'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/items/{id}:
+    get:
+      summary: Get an inventory item
+      description: Returns a single inventory item by its numeric ID. No authentication required.
+      operationId: getItemById
+      tags:
+        - Items
+      parameters:
+        - $ref: '#/components/parameters/ItemIdParam'
+      responses:
+        '200':
+          description: Inventory item details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/InventoryItem'
+                  error:
+                    type: 'null'
+                  meta:
+                    $ref: '#/components/schemas/ApiMeta'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    put:
+      summary: Replace an inventory item
+      description: Fully replaces an existing inventory item. Requires **admin** or **manager** role.
+      operationId: replaceItem
+      tags:
+        - Items
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ItemIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateItemRequest'
+      responses:
+        '200':
+          description: Updated inventory item
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/InventoryItem'
+                  error:
+                    type: 'null'
+                  meta:
+                    $ref: '#/components/schemas/ApiMeta'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    patch:
+      summary: Partially update an inventory item
+      description: Updates only the provided fields of an existing inventory item. Requires **admin** or **manager** role.
+      operationId: patchItem
+      tags:
+        - Items
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ItemIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateItemRequest'
+      responses:
+        '200':
+          description: Updated inventory item
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/InventoryItem'
+                  error:
+                    type: 'null'
+                  meta:
+                    $ref: '#/components/schemas/ApiMeta'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      summary: Delete an inventory item
+      description: Permanently deletes an inventory item. Requires **admin** role.
+      operationId: deleteItem
+      tags:
+        - Items
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ItemIdParam'
+      responses:
+        '200':
+          description: Item deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      deleted:
+                        type: boolean
+                        example: true
+                  error:
+                    type: 'null'
+                  meta:
+                    $ref: '#/components/schemas/ApiMeta'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/items/{id}/history:
+    get:
+      summary: Get item audit history
+      description: Returns the full audit log for a specific inventory item. Requires authentication.
+      operationId: getItemHistory
+      tags:
+        - Items
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ItemIdParam'
+      responses:
+        '200':
+          description: Audit log entries for the item
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AuditLog'
+                  error:
+                    type: 'null'
+                  meta:
+                    $ref: '#/components/schemas/ApiMeta'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ──────────────────────────────────────────────────────────────────
+  # Suppliers
+  # ──────────────────────────────────────────────────────────────────
+  /api/suppliers:
+    get:
+      summary: List suppliers
+      description: Returns all suppliers. No authentication required.
+      operationId: listSuppliers
+      tags:
+        - Suppliers
+      responses:
+        '200':
+          description: List of suppliers
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Supplier'
+                  error:
+                    type: 'null'
+                  meta:
+                    $ref: '#/components/schemas/ApiMeta'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/suppliers/{id}:
+    get:
+      summary: Get a supplier
+      description: Returns a single supplier by its numeric ID. No authentication required.
+      operationId: getSupplierById
+      tags:
+        - Suppliers
+      parameters:
+        - $ref: '#/components/parameters/SupplierIdParam'
+      responses:
+        '200':
+          description: Supplier details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Supplier'
+                  error:
+                    type: 'null'
+                  meta:
+                    $ref: '#/components/schemas/ApiMeta'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ──────────────────────────────────────────────────────────────────
+  # Users & Auth
+  # ──────────────────────────────────────────────────────────────────
+  /api/users/login:
+    post:
+      summary: Login
+      description: Authenticates a user and returns a signed JWT token valid for 8 hours.
+      operationId: login
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful — returns token and user profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      token:
+                        type: string
+                        description: JWT Bearer token
+                        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                      user:
+                        $ref: '#/components/schemas/User'
+                      role:
+                        $ref: '#/components/schemas/UserRole'
+                  error:
+                    type: 'null'
+                  meta:
+                    $ref: '#/components/schemas/ApiMeta'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: Invalid email or password
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/users/me:
+    get:
+      summary: Get current user profile
+      description: Returns the profile of the currently authenticated user.
+      operationId: getMe
+      tags:
+        - Auth
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Authenticated user profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/User'
+                  error:
+                    type: 'null'
+                  meta:
+                    $ref: '#/components/schemas/ApiMeta'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/users/password:
+    put:
+      summary: Change password
+      description: Changes the authenticated user's password. Requires the current password for verification.
+      operationId: changePassword
+      tags:
+        - Auth
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+      responses:
+        '200':
+          description: Password changed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: Password changed successfully
+                  error:
+                    type: 'null'
+                  meta:
+                    $ref: '#/components/schemas/ApiMeta'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: Unauthorized or current password is incorrect
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/users:
+    get:
+      summary: List users
+      description: Returns all user accounts. Requires **admin** role. Password hashes are never included.
+      operationId: listUsers
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of users (without password hashes)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+                  error:
+                    type: 'null'
+                  meta:
+                    $ref: '#/components/schemas/ApiMeta'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      summary: Create a user
+      description: Creates a new user account. Requires **admin** role. Password is stored hashed (bcrypt, 12 rounds).
+      operationId: createUser
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        '201':
+          description: User created successfully (without password hash)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/User'
+                  error:
+                    type: 'null'
+                  meta:
+                    $ref: '#/components/schemas/ApiMeta'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          description: A user with the given email already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ──────────────────────────────────────────────────────────────────
+  # Reports
+  # ──────────────────────────────────────────────────────────────────
+  /api/reports/inventory-summary:
+    get:
+      summary: Inventory summary
+      description: Returns an overview of inventory health including total items, total value, low-stock count, out-of-stock count, and per-category counts. No authentication required.
+      operationId: getInventorySummary
+      tags:
+        - Reports
+      responses:
+        '200':
+          description: Inventory summary
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/InventorySummary'
+                  error:
+                    type: 'null'
+                  meta:
+                    $ref: '#/components/schemas/ApiMeta'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/reports/reorder:
+    get:
+      summary: Reorder report
+      description: Returns items that need to be reordered, sorted by urgency, including supplier contact information. Requires authentication.
+      operationId: getReorderReport
+      tags:
+        - Reports
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Items that need reordering
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ReorderItem'
+                  error:
+                    type: 'null'
+                  meta:
+                    $ref: '#/components/schemas/ApiMeta'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+tags:
+  - name: Health
+    description: Service health check
+  - name: Items
+    description: Inventory item management
+  - name: Suppliers
+    description: Supplier information
+  - name: Auth
+    description: Authentication and current-user operations
+  - name: Users
+    description: User account management (admin only)
+  - name: Reports
+    description: Inventory reports and analytics
